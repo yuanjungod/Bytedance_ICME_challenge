@@ -1,4 +1,5 @@
 import numpy as np
+from functools import reduce
 import tensorflow as tf
 
 
