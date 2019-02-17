@@ -84,7 +84,7 @@ class DataParser(object):
         idx = idx[:feature_num]
 
         shifts = PosShifts.shift()
-        idx = [idx[i] + shifts[i] for i in xrange(len(idx))]
+        idx = [idx[i] + shifts[i] for i in range(len(idx))]
 
         idx = map(lambda one_id: np.int32(one_id), idx)
         return idx, features, label

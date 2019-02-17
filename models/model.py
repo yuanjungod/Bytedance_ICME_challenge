@@ -26,7 +26,8 @@ class RecommendModelHandler(object):
     def build_model(self):
         """ build recommend model framework"""
         config = tf.estimator.RunConfig().replace(
-            session_config=tf.ConfigProto(device_count={'CPU': self._num_threads}),
+            # session_config=tf.ConfigProto(device_count={'CPU': self._num_threads}),
+            session_config=tf.ConfigProto(log_device_placement=True),
             log_step_count_steps=20)
         PosShifts(self._track)
         feature_size = PosShifts.get_features_num()
