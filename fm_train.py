@@ -42,7 +42,7 @@ for _ in range(5):
         # print(result["index"][0])
         deep_fm.fit2(model, optimizer, criterion, result["index"], result["value"], result["video"], result["title"],
                      result["title_value"], result["like"], result["finish"], count,
-                     save_path="/Users/quantum/code/Bytedance_ICME_challenge/ibyte.model")
+                     save_path="/Users/quantum/code/Bytedance_ICME_challenge/")
         count += 1
         load_data_time = time.time()
 
