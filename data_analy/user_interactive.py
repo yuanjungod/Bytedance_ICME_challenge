@@ -148,6 +148,7 @@ class UserInteractiveTool(object):
                 if i not in [0, 3, 7, 8]:
                     result.append(record[i]+1)
             yield result, item_id, like, finish
+            result = list()
 
     def get_max_id(self, name):
         start = time.time()
