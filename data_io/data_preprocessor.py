@@ -52,5 +52,7 @@ if __name__ == "__main__":
     user_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/user.db"
     count = 0
     for i in DataPreprocessor(video_db_path, user_db_path, title_feature_path).get_train_data():
-        json.dump(i, "/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons/%s.json" % count)
+        fp = open("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons/%s.json" % count, 'w')
+        json.dump(i, fp)
+        fp.close()
         count += 1
