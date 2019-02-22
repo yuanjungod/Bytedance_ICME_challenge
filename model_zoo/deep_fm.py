@@ -415,6 +415,8 @@ class DeepFM(torch.nn.Module):
                           (count + 1, i + 1, total_loss / 100.0, eval, time() - batch_begin_time))
                     total_loss = 0.0
                     batch_begin_time = time()
+            if save_path and self.total_count % 20000 == 0:
+                torch.save(self.state_dict(), os.path.join(save_path, "byte_%s.model" % self.total_count))
 
         train_loss, train_eval = self.eval_by_batch(Xi_train, Xv_train, y_train, x_size, video_feature, title_feature, title_value)
         train_result.append(train_eval)
@@ -430,8 +432,7 @@ class DeepFM(torch.nn.Module):
             print('[%d] loss: %.6f metric: %.6f time: %.1f s' %
                   (count + 1, valid_loss, valid_eval, time() - epoch_begin_time))
             print('*' * 50)
-        if save_path and self.total_count % 20000 == 0:
-            torch.save(self.state_dict(), os.path.join(save_path, "byte_%s.model" % self.total_count))
+
 
     def fit(self, Xi_train, Xv_train, y_train, Xi_valid=None, Xv_valid=None,
             y_valid=None, ealry_stopping=False, refit=False, save_path=None):
