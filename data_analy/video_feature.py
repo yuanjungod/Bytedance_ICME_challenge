@@ -37,9 +37,11 @@ class VideoFeature(object):
         cursor = self.cursor.execute(sql)
         for row in cursor:
             result = json.loads(row[1])
-            if len(result) != 128:
-                result = [0 for _ in range(128)]
+
         # print("consume: %s" % (time.time() - start))
+        if len(result) == 0:
+            print("video embedding is 0!!!!!!!", item_id)
+            result = [0 for _ in range(128)]
         return result
 
 

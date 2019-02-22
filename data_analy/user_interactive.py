@@ -129,25 +129,25 @@ class UserInteractiveTool(object):
                 print(read_count)
         track_file.close()
 
-    def get(self, record_id):
+    def get(self, record_id_1, record_id_2):
         start = time.time()
-        sql = "SELECT * FROM USER WHERE id=%s" % record_id
+        sql = "SELECT * FROM USER WHERE id>=%s and id < %s" % (record_id_1, record_id_2)
         result = list()
         cursor = self.cursor.execute(sql)
+        print("user consume", time.time() - start)
         # print(cursor)
-        record = None
         for row in cursor:
             # print(row)
             record = row
             # result["item_id"] = row[1]
-        # print("consume: %s" % (time.time() - start))
-        item_id = record[3]
-        finish = record[7]
-        like = record[8]
-        for i in range(len(record)):
-            if i not in [0, 3, 7, 8]:
-                result.append(record[i]+1)
-        return result, item_id, like, finish
+            # print("consume: %s" % (time.time() - start))
+            item_id = record[3]
+            finish = record[7]
+            like = record[8]
+            for i in range(len(record)):
+                if i not in [0, 3, 7, 8]:
+                    result.append(record[i]+1)
+            yield result, item_id, like, finish
 
     def get_max_id(self, name):
         start = time.time()
