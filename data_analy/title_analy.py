@@ -44,10 +44,11 @@ class TitleAnalyTool(object):
 
     def get_all(self):
         start = time.time()
+        self.result_dict = dict()
         sql = "SELECT * FROM TITLE"
         cursor = self.cursor.execute(sql)
         for row in cursor:
-            print(row[0], row[1])
+            # print(row[0], row[1])
             self.result_dict[row[0]] = [int(i) for i in json.loads(row[1])]
         print("title consume", time.time() - start)
 
