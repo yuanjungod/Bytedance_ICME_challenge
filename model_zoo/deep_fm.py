@@ -75,6 +75,7 @@ class DeepFM(torch.nn.Module):
                  use_cuda=True, n_class=1, greater_is_better=True
                  ):
         super(DeepFM, self).__init__()
+        self.total_count = 0
         self.target = target
         self.field_size = field_size
         self.feature_sizes = feature_sizes
@@ -322,9 +323,9 @@ class DeepFM(torch.nn.Module):
              y_like_train, y_finish_train, count, Xi_valid=None,
              Xv_valid=None, y_like_valid=None, y_finish_valid=None, ealry_stopping=False, save_path=None):
 
-        if save_path and not os.path.exists('/'.join(save_path.split('/')[0:-1])):
-            print("Save path is not existed!")
-            return
+        # if save_path and not os.path.exists('/'.join(save_path.split('/')[0:-1])):
+        #     print("Save path is not existed!")
+        #     return
 
         if self.verbose:
             print("pre_process data ing...")
@@ -370,6 +371,7 @@ class DeepFM(torch.nn.Module):
         epoch_begin_time = time()
         batch_begin_time = time()
         for i in range(batch_iter + 1):
+            self.total_count += 1
             offset = i * self.batch_size
             end = min(x_size, offset + self.batch_size)
             if offset == end:
@@ -428,8 +430,8 @@ class DeepFM(torch.nn.Module):
             print('[%d] loss: %.6f metric: %.6f time: %.1f s' %
                   (count + 1, valid_loss, valid_eval, time() - epoch_begin_time))
             print('*' * 50)
-        if save_path:
-            torch.save(self.state_dict(), save_path)
+        if save_path and self.total_count % 20000 == 0:
+            torch.save(self.state_dict(), os.path.join(save_path, "byte_%s.model" % self.total_count))
 
     def fit(self, Xi_train, Xv_train, y_train, Xi_valid=None, Xv_valid=None,
             y_valid=None, ealry_stopping=False, refit=False, save_path=None):
