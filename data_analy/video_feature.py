@@ -37,7 +37,7 @@ class VideoFeature(object):
         cursor = self.cursor.execute(sql)
         for row in cursor:
             result = json.loads(row[1])
-            if len(result) == 0:
+            if len(result) != 128:
                 result = [0 for _ in range(128)]
         # print("consume: %s" % (time.time() - start))
         return result

@@ -22,7 +22,7 @@ class DataPreprocessor(object):
     def get_train_data(self):
         result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
                   "video": [], 'feature_sizes': self.FEATURE_SIZES, 'tile_word_size': self.title_feature_tool.MAX_WORD}
-        step = 100000
+        step = 20000
         for i in range(0, self.user_interactive_tool.get_max_id("ID"), step):
             print("data loading")
             for j in range(i, i + step):

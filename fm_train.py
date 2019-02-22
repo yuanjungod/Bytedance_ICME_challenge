@@ -5,12 +5,12 @@ import torch.nn.functional as F
 import time
 
 
-video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
-title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
-user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 # video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
 # title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
+video_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/video.db"
+title_feature_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/title.db"
+user_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/user.db"
 deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, "finish")
 
 """
@@ -36,7 +36,7 @@ for result in DataPreprocessor(video_db_path, user_db_path, title_feature_path).
     # print(result["index"][0])
     deep_fm.fit2(model, optimizer, criterion, result["index"], result["value"], result["video"], result["title"],
                  result["title_value"], result["like"], result["finish"], count,
-                 save_path="/Users/quantum/code/Bytedance_ICME_challenge/ibyte.model")
+                 save_path="/home/yuanjun/code/Bytedance_ICME_challenge/ibyte.model")
     count += 1
     load_data_time = time.time()
 
