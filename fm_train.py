@@ -33,7 +33,7 @@ count = 0
 load_data_time = time.time()
 for result in DataPreprocessor(video_db_path, user_db_path, title_feature_path).get_train_data():
     print("%s data load finished" % count, time.time() - load_data_time)
-    # print(result["index"][0])
+    print(result["index"][0])
     deep_fm.fit2(model, optimizer, criterion, result["index"], result["value"], result["video"], result["title"],
                  result["title_value"], result["like"], result["finish"], count,
                  save_path="/Users/quantum/code/Bytedance_ICME_challenge/ibyte.model")
