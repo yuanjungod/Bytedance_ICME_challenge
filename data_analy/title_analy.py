@@ -55,8 +55,7 @@ class TitleAnalyTool(object):
     def get(self, item_id):
         if self.result_dict is None:
             self.get_all()
-        return self.result_dict[item_id]
-
+        return self.result_dict.get(item_id, list())
 
     # def get(self, item_id):
     #     start = time.time()
