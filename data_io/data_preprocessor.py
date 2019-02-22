@@ -3,6 +3,7 @@ from data_analy.user_interactive import *
 from data_analy.title_analy import *
 import os
 import pandas as pd
+import json
 
 
 class DataPreprocessor(object):
@@ -43,9 +44,13 @@ class DataPreprocessor(object):
 
 
 if __name__ == "__main__":
-    video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
-    title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
-    user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
+    # video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
+    # title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
+    # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
+    video_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/video.db"
+    title_feature_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/title.db"
+    user_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/user.db"
+    count = 0
     for i in DataPreprocessor(video_db_path, user_db_path, title_feature_path).get_train_data():
-        print(i)
-        exit()
+        json.dump(i, "%s.json" % count)
+        count += 1
