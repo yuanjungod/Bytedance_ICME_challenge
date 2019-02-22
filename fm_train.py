@@ -3,6 +3,8 @@ from model_zoo.deep_fm import DeepFM
 import torch
 import torch.nn.functional as F
 import time
+import os
+import json
 
 
 # video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
@@ -31,7 +33,10 @@ criterion = F.binary_cross_entropy_with_logits
 
 count = 0
 load_data_time = time.time()
-for result in DataPreprocessor(video_db_path, user_db_path, title_feature_path).get_train_data():
+for result in os.listdir("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons"):
+    fp = open(os.path.join("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons", result), "r")
+    result = json.load(fp)
+    fp.close()
     print("%s data load finished" % count, time.time() - load_data_time)
     print(result["index"][0])
     deep_fm.fit2(model, optimizer, criterion, result["index"], result["value"], result["video"], result["title"],
@@ -40,4 +45,3 @@ for result in DataPreprocessor(video_db_path, user_db_path, title_feature_path).
     count += 1
     load_data_time = time.time()
 
-    # exit()
