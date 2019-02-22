@@ -1,39 +1,50 @@
 from data_analy.video_feature import *
 from data_analy.user_interactive import *
 from data_analy.title_analy import *
+import os
+import pandas as pd
 
 
 class DataPreprocessor(object):
 
-    def __init__(self, video_feature_path, title_feature_path, user_interactivate_path, debug=False):
-        print("init video feature")
-        self.video_feature_tool = VideoFeature(video_feature_path, debug)
-        print("init title feature")
-        self.title_feature_tool = TitleAnalyTool(title_feature_path, debug)
-        print("init user feature")
-        self.user_interactive_tool = UserInteractiveTool(user_interactivate_path, debug)
+    FIELD_SIZE = 9
+    FEATURE_SIZES = [80000, 400, 900000, 500, 5, 90000, 80000, 30, 20]
+    MAX_TITLE_SIZE = 30
 
-    def preprocess(self):
-        print("one hot begin")
-        self.user_interactive_tool.one_hot_features()
-        print("merge title begin")
-        self.user_interactive_tool.user_interactive_pd["title"] = \
-            self.user_interactive_tool.user_interactive_pd["item_id"].map(
-                lambda a: self.title_feature_tool.origin_feature_dict.get(a, None))
-        print("merge video begin")
-        self.user_interactive_tool.user_interactive_pd["video"] = \
-            self.user_interactive_tool.user_interactive_pd["item_id"].map(
-                lambda a: self.video_feature_tool.video_dict.get(a, None))
-        print("save begin")
+    def __init__(self, video_db_path, user_db_path, title_feature_path):
+        print("init video feature")
+        self.video_feature_tool = VideoFeature(video_db_path)
+        print("init title feature")
+        self.title_feature_tool = TitleAnalyTool(title_feature_path)
+        print("init user feature")
+        self.user_interactive_tool = UserInteractiveTool(user_db_path)
+
+    def get_train_data(self):
+        result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
+                  "video": [], 'feature_sizes': self.FEATURE_SIZES, 'tile_word_size': self.title_feature_tool.MAX_WORD}
         step = 100000
-        for i in range(0, len(self.user_interactive_tool.user_interactive_pd), step):
-            self.user_interactive_tool.user_interactive_pd[i: i+step].to_csv(
-                "/Volumes/Seagate Expansion Drive/byte/track2/%s.csv" % i)
-        print("save end")
+        for i in range(0, self.user_interactive_tool.get_max_id("ID"), step):
+            print("data loading")
+            for j in range(i, i + step):
+                user_action, item_id, like, finish = self.user_interactive_tool.get(j)
+                result['like'].append(like)
+                result['finish'].append(finish)
+                result['index'].append(user_action)
+                result['value'].append([1 for _ in user_action])
+                title_list = list(self.title_feature_tool.get(item_id))
+                result['title'].append([title_list[i] if i < len(title_list) else 0 for i in range(30)])
+                result['title_value'].append([1 if i < len(title_list) else 0 for i in range(30)])
+                result['video'].append(self.video_feature_tool.get_video_embedding(item_id))
+            yield result
+            result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
+                      "video": [], 'feature_sizes': self.FEATURE_SIZES,
+                      'tile_word_size': self.title_feature_tool.MAX_WORD}
 
 
 if __name__ == "__main__":
-    video_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/track2_video_features.txt"
-    title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/track2_title.txt"
-    user_interactive_path = "/Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.txt"
-    DataPreprocessor(video_feature_path, title_feature_path, user_interactive_path, False).preprocess()
+    video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
+    title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
+    user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
+    for i in DataPreprocessor(video_db_path, user_db_path, title_feature_path).get_train_data():
+        print(i)
+        exit()

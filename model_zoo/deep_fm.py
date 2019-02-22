@@ -67,7 +67,7 @@ class DeepFM(torch.nn.Module):
     Attention: only support logsitcs regression
     """
 
-    def __init__(self, field_size, feature_sizes, embedding_size=4, is_shallow_dropout=True, dropout_shallow=[0.5, 0.5],
+    def __init__(self, field_size, tile_word_size, feature_sizes, video_feature_size, target, embedding_size=32, is_shallow_dropout=True, dropout_shallow=[0.5, 0.5],
                  h_depth=2, deep_layers=[32, 32], is_deep_dropout=True, dropout_deep=[0.5, 0.5, 0.5],
                  deep_layers_activation='relu', n_epochs=64, batch_size=256, learning_rate=0.003,
                  optimizer_type='adam', is_batch_norm=False, verbose=False, random_seed=950104, weight_decay=0.0,
@@ -75,9 +75,12 @@ class DeepFM(torch.nn.Module):
                  use_cuda=True, n_class=1, greater_is_better=True
                  ):
         super(DeepFM, self).__init__()
+        self.target = target
         self.field_size = field_size
         self.feature_sizes = feature_sizes
+        self.tile_word_size = tile_word_size
         self.embedding_size = embedding_size
+        self.video_feature_size = video_feature_size
         self.is_shallow_dropout = is_shallow_dropout
         self.dropout_shallow = dropout_shallow
         self.h_depth = h_depth
@@ -139,6 +142,8 @@ class DeepFM(torch.nn.Module):
         """
             fm part
         """
+        self.title_embedding = nn.Embedding(tile_word_size, embedding_size)
+        self.video_line = nn.Linear(video_feature_size, embedding_size)
         if self.use_fm:
             print("Init fm part")
             self.fm_first_order_embeddings = nn.ModuleList(
@@ -179,7 +184,7 @@ class DeepFM(torch.nn.Module):
             if self.is_deep_dropout:
                 self.linear_0_dropout = nn.Dropout(self.dropout_deep[0])
 
-            self.linear_1 = nn.Linear(self.field_size * self.embedding_size, deep_layers[0])
+            self.linear_1 = nn.Linear((self.field_size+2) * self.embedding_size, deep_layers[0])
             if self.is_batch_norm:
                 self.batch_norm_1 = nn.BatchNorm1d(deep_layers[0])
             if self.is_deep_dropout:
@@ -195,7 +200,7 @@ class DeepFM(torch.nn.Module):
 
         print("Init succeed")
 
-    def forward(self, Xi, Xv, video_feature):
+    def forward(self, Xi, Xv, video_feature, title_feature, title_value):
         """
         :param Xi_train: index input tensor, batch_size * k * 1
         :param Xv_train: value input tensor, batch_size * k * 1
@@ -210,6 +215,11 @@ class DeepFM(torch.nn.Module):
 
             fm_first_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
                                       enumerate(self.fm_first_order_embeddings)]
+            # fm_first_order_emb_arr = list()
+            # for i, emb in enumerate(self.fm_first_order_embeddings):
+            #     print(Xi[:, i, :], emb)
+            #     # print(Xi[:, i, :], emb, torch.sum(emb(Xi[:, i, :]), 1).t(), Xv[:, i])
+            #     fm_first_order_emb_arr.append((torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t())
 
             fm_first_order = torch.cat(fm_first_order_emb_arr, 1)
             if self.is_shallow_dropout:
@@ -218,15 +228,6 @@ class DeepFM(torch.nn.Module):
             # use 2xy = (x+y)^2 - x^2 - y^2 reduce calculation
             fm_second_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
                                        enumerate(self.fm_second_order_embeddings)]
-            # print(Xi[:, 0, :].size())
-            # print(self.fm_second_order_embeddings[0](Xi[:, 0, :]).size())
-            # print(torch.sum(self.fm_second_order_embeddings[0](Xi[:, 0, :]), 1).t())
-            # print((torch.sum(self.fm_second_order_embeddings[0](Xi[:, 0, :]), 1).t()*Xv[:, 0]))
-            # print(Xv[:, 0].size())
-            # print(Xi.size())
-            # print(Xi[:, 0, :].size())
-            # print(len(fm_second_order_emb_arr), fm_second_order_emb_arr[0].size(), fm_second_order_emb_arr[1].size(), fm_second_order_emb_arr[2].size())
-            # exit()
             fm_sum_second_order_emb = sum(fm_second_order_emb_arr)
             # print("sum", fm_sum_second_order_emb.size())
             # exit()
@@ -271,7 +272,15 @@ class DeepFM(torch.nn.Module):
                                       enumerate(self.fm_second_order_embeddings)], 1)
 
             if video_feature is not None:
+                video_feature = self.video_line(video_feature)
                 deep_emb = torch.cat([deep_emb, video_feature], 1)
+
+            title_embedding = self.title_embedding(title_feature)
+            title_embedding = title_embedding*title_value
+            title_embedding = title_embedding.permute(0, 2, 1)
+            title_embedding = torch.sum(title_embedding, -1)
+            deep_emb = torch.cat([deep_emb, title_embedding], 1)
+            # print(deep_emb.shape)
 
             if self.deep_layers_activation == 'sigmoid':
                 activation = F.sigmoid
@@ -300,8 +309,7 @@ class DeepFM(torch.nn.Module):
         if self.use_fm and self.use_deep:
             total_sum = torch.sum(fm_first_order, 1) + torch.sum(fm_second_order, 1) + torch.sum(x_deep, 1) + self.bias
         elif self.use_ffm and self.use_deep:
-            total_sum = torch.sum(ffm_first_order, 1) + torch.sum(ffm_second_order, 1) + torch.sum(x_deep,
-                                                                                                   1) + self.bias
+            total_sum = torch.sum(ffm_first_order, 1) + torch.sum(ffm_second_order, 1) + torch.sum(x_deep, 1) + self.bias
         elif self.use_fm:
             total_sum = torch.sum(fm_first_order, 1) + torch.sum(fm_second_order, 1) + self.bias
         elif self.use_ffm:
@@ -309,6 +317,119 @@ class DeepFM(torch.nn.Module):
         else:
             total_sum = torch.sum(x_deep, 1)
         return total_sum
+
+    def fit2(self, model, optimizer, criterion, Xi_train, Xv_train, video_feature, title_feature, title_value,
+             y_like_train, y_finish_train, count, Xi_valid=None,
+             Xv_valid=None, y_like_valid=None, y_finish_valid=None, ealry_stopping=False, save_path=None):
+
+        if save_path and not os.path.exists('/'.join(save_path.split('/')[0:-1])):
+            print("Save path is not existed!")
+            return
+
+        if self.verbose:
+            print("pre_process data ing...")
+        is_valid = False
+
+        Xi_train = np.array(Xi_train).reshape((-1, self.field_size, 1))
+        # video_feature = np.array(video_feature)
+        title_feature = np.array(title_feature)
+        title_value = [[[j for _ in range(self.embedding_size)] for j in i] for i in title_value]
+        title_value = np.array(title_value)
+        Xv_train = np.array(Xv_train)
+        y_like_train = np.array(y_like_train)
+        y_finish_train = np.array(y_finish_train)
+        if self.target == "finish":
+            y_train = y_finish_train
+        elif self.target == "like":
+            y_train = y_like_train
+        else:
+            print("target wrong")
+            return
+        x_size = Xi_train.shape[0]
+        if Xi_valid:
+            Xi_valid = np.array(Xi_valid).reshape((-1, self.field_size, 1))
+            Xv_valid = np.array(Xv_valid)
+            y_like_valid = np.array(y_like_valid)
+            y_finish_valid = np.array(y_finish_valid)
+            if self.target == "finish":
+                y_valid = y_finish_valid
+            elif self.target == "like":
+                y_valid = y_like_valid
+            else:
+                print("target wrong")
+                return
+            x_valid_size = Xi_valid.shape[0]
+            is_valid = True
+        if self.verbose:
+            print("pre_process data finished")
+
+        train_result = []
+        valid_result = []
+        total_loss = 0.0
+        batch_iter = x_size // self.batch_size
+        epoch_begin_time = time()
+        batch_begin_time = time()
+        for i in range(batch_iter + 1):
+            offset = i * self.batch_size
+            end = min(x_size, offset + self.batch_size)
+            if offset == end:
+                break
+            batch_xi = Variable(torch.LongTensor(Xi_train[offset:end]))
+            batch_xv = Variable(torch.FloatTensor(Xv_train[offset:end]))
+            batch_like_y = Variable(torch.FloatTensor(y_like_train[offset:end]))
+            batch_finish_y = Variable(torch.FloatTensor(y_finish_train[offset:end]))
+
+            try:
+                batch_video_feature = Variable(torch.FloatTensor(video_feature[offset:end]))
+            except:
+                print("fucked", video_feature[offset:end])
+                continue
+            batch_title_value = Variable(torch.FloatTensor(title_value[offset:end]))
+            batch_title_feature = Variable(torch.LongTensor(title_feature[offset:end]))
+
+            if self.use_cuda:
+                batch_xi, batch_xv, batch_like_y, batch_finish_y, batch_video_feature, batch_title_value, batch_title_feature = \
+                    batch_xi.cuda(), batch_xv.cuda(), batch_like_y.cuda(), batch_finish_y.cuda(), batch_video_feature.cuda(), \
+                    batch_title_value.cuda(), batch_title_feature.cuda()
+            optimizer.zero_grad()
+
+            outputs = model(batch_xi, batch_xv, batch_video_feature, batch_title_feature, batch_title_value)
+            if self.target == "finish":
+                batch_y = batch_finish_y
+            elif self.target == "like":
+                batch_y = batch_like_y
+            else:
+                print("target wrong")
+                return
+            loss = criterion(outputs, batch_y)
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.data
+            if self.verbose:
+                if i % 100 == 99:  # print every 100 mini-batches
+                    eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_title_feature, batch_title_value, batch_y)
+                    print('[%d, %5d] loss: %.6f metric: %.6f time: %.1f s' %
+                          (count + 1, i + 1, total_loss / 100.0, eval, time() - batch_begin_time))
+                    total_loss = 0.0
+                    batch_begin_time = time()
+
+        train_loss, train_eval = self.eval_by_batch(Xi_train, Xv_train, y_train, x_size, video_feature, title_feature, title_value)
+        train_result.append(train_eval)
+        print('*' * 50)
+        print('[%d] loss: %.6f metric: %.6f time: %.1f s' %
+              (count + 1, train_loss, train_eval, time() - epoch_begin_time))
+        print('*' * 50)
+
+        if is_valid:
+            valid_loss, valid_eval = self.eval_by_batch(Xi_valid, Xv_valid, y_valid, x_valid_size)
+            valid_result.append(valid_eval)
+            print('*' * 50)
+            print('[%d] loss: %.6f metric: %.6f time: %.1f s' %
+                  (count + 1, valid_loss, valid_eval, time() - epoch_begin_time))
+            print('*' * 50)
+        if save_path:
+            torch.save(self.state_dict(), save_path)
 
     def fit(self, Xi_train, Xv_train, y_train, Xi_valid=None, Xv_valid=None,
             y_valid=None, ealry_stopping=False, refit=False, save_path=None):
@@ -462,7 +583,7 @@ class DeepFM(torch.nn.Module):
             if self.verbose:
                 print("refit finished")
 
-    def eval_by_batch(self, Xi, Xv, y, x_size):
+    def eval_by_batch(self, Xi, Xv, y, x_size, video_feature, title_feature, title_value):
         total_loss = 0.0
         y_pred = []
         if self.use_ffm:
@@ -480,9 +601,14 @@ class DeepFM(torch.nn.Module):
             batch_xi = Variable(torch.LongTensor(Xi[offset:end]))
             batch_xv = Variable(torch.FloatTensor(Xv[offset:end]))
             batch_y = Variable(torch.FloatTensor(y[offset:end]))
+            batch_video_feature = Variable(torch.FloatTensor(video_feature[offset:end]))
+            batch_title_feature = Variable(torch.LongTensor(title_feature[offset:end]))
+            batch_title_value = Variable(torch.FloatTensor(title_value[offset:end]))
             if self.use_cuda:
-                batch_xi, batch_xv, batch_y = batch_xi.cuda(), batch_xv.cuda(), batch_y.cuda()
-            outputs = model(batch_xi, batch_xv)
+                batch_xi, batch_xv, batch_y, batch_video_feature, batch_title_feature, batch_title_value = \
+                    batch_xi.cuda(), batch_xv.cuda(), batch_y.cuda(), batch_video_feature.cuda(),\
+                    batch_title_feature.cuda(), batch_title_value.cuda()
+            outputs = model(batch_xi, batch_xv, batch_video_feature, batch_title_feature, batch_title_value)
             pred = F.sigmoid(outputs).cpu()
             y_pred.extend(pred.data.numpy())
             loss = criterion(outputs, batch_y)
@@ -550,22 +676,22 @@ class DeepFM(torch.nn.Module):
         pred = F.sigmoid(model(Xi, Xv)).cpu()
         return (pred.data.numpy() > 0.5)
 
-    def inner_predict_proba(self, Xi, Xv):
+    def inner_predict_proba(self, Xi, Xv, video_feature, title_feature, title_value):
         """
         :param Xi: tensor of feature index
         :param Xv: tensor of feature value
         :return: output, numpy
         """
         model = self.eval()
-        pred = F.sigmoid(model(Xi, Xv)).cpu()
+        pred = F.sigmoid(model(Xi, Xv, video_feature, title_feature, title_value)).cpu()
         return pred.data.numpy()
 
-    def evaluate(self, Xi, Xv, y):
+    def evaluate(self, Xi, Xv, video_feature, title_feature, title_value, y):
         """
         :param Xi: tensor of feature index
         :param Xv: tensor of feature value
         :param y: tensor of labels
         :return: metric of the evaluation
         """
-        y_pred = self.inner_predict_proba(Xi, Xv)
+        y_pred = self.inner_predict_proba(Xi, Xv, video_feature, title_feature, title_value)
         return self.eval_metric(y.cpu().data.numpy(), y_pred)

@@ -1,51 +1,27 @@
-import pandas as pd
+import sqlite3
+import time
 
 
 class UserInteractiveTool(object):
 
-    def __init__(self, user_interactivate_path, debug=False):
+    def __init__(self, db_path):
         # /Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.txt
-        track_file = open(user_interactivate_path)
-        user_interactive_dict = dict()
-        user_interactive_dict['uid'] = list()
-        user_interactive_dict['user_city'] = list()
-        user_interactive_dict['item_id'] = list()
-        user_interactive_dict['author_id'] = list()
-        user_interactive_dict['item_city'] = list()
-        user_interactive_dict['channel'] = list()
-        user_interactive_dict['finish'] = list()
-        user_interactive_dict['like'] = list()
-        user_interactive_dict['music_id'] = list()
-        user_interactive_dict['device_id'] = list()
-        user_interactive_dict['create_time'] = list()
-        user_interactive_dict['video_duration'] = list()
+        self.db_client = sqlite3.connect(db_path)
+        self.cursor = self.db_client.cursor()
 
-        read_count = 0
-        line = track_file.readline()
-        while line:
-            read_count += 1
-            if read_count > 10000 and debug:
-                break
-            if read_count % 10000 == 0:
-                print(read_count)
-            column_list = line.split("\t")
-            user_interactive_dict['uid'].append(column_list[0])
-            user_interactive_dict['user_city'].append(column_list[1])
-            user_interactive_dict['item_id'].append(column_list[2])
-            user_interactive_dict['author_id'].append(column_list[3])
-            user_interactive_dict['item_city'].append(column_list[4])
-            user_interactive_dict['channel'].append(column_list[5])
-            user_interactive_dict['finish'].append(column_list[6])
-            user_interactive_dict['like'].append(column_list[7])
-            user_interactive_dict['music_id'].append(column_list[8])
-            user_interactive_dict['device_id'].append(column_list[9])
-            user_interactive_dict['create_time'].append(column_list[10])
-            user_interactive_dict['video_duration'].append(column_list[11])
-            line = track_file.readline()
-
-        self.user_interactive_pd = pd.DataFrame(user_interactive_dict)
-        del user_interactive_dict
-        track_file.close()
+        # user_interactive_dict = dict()
+        # user_interactive_dict['uid'] = list()
+        # user_interactive_dict['user_city'] = list()
+        # user_interactive_dict['item_id'] = list()
+        # user_interactive_dict['author_id'] = list()
+        # user_interactive_dict['item_city'] = list()
+        # user_interactive_dict['channel'] = list()
+        # user_interactive_dict['finish'] = list()
+        # user_interactive_dict['like'] = list()
+        # user_interactive_dict['music_id'] = list()
+        # user_interactive_dict['device_id'] = list()
+        # user_interactive_dict['create_time'] = list()
+        # user_interactive_dict['video_duration'] = list()
 
     @classmethod
     def one_hot_video_duration(cls, duration):
@@ -115,9 +91,94 @@ class UserInteractiveTool(object):
         self.user_interactive_pd["create_time"] = self.user_interactive_pd["create_time"].map(self.one_hot_create_time)
         return self.user_interactive_pd
 
+    def create_table(self):
+        sql = '''CREATE TABLE USER_TEST
+       (ID INT PRIMARY KEY     NOT NULL,
+        UID INT     NOT NULL, 
+        USER_CITY INT     NOT NULL,
+        ITEM_ID INT     NOT NULL,
+        AUTHOR_ID INT     NOT NULL,
+        ITEM_CITY INT     NOT NULL,
+        CHANNEL INT     NOT NULL,
+        FINISH INT     NOT NULL,
+        LIKE INT     NOT NULL,
+        MUSIC_ID INT     NOT NULL,
+        DEVICE_ID INT     NOT NULL,
+        CREATE_TIME INT     NOT NULL,
+        VIDEO_DURATION INT     NOT NULL);'''
+        self.cursor.execute(sql)
+        self.db_client.commit()
+
+    def insert(self, user_interactivate_path):
+        read_count = 0
+        track_file = open(user_interactivate_path)
+        line = track_file.readline()
+        while line:
+            column_list = line.split("\t")
+            sql = "INSERT INTO USER_TEST (ID, UID, USER_CITY, ITEM_ID, AUTHOR_ID, ITEM_CITY, CHANNEL, FINISH, LIKE, " \
+                  "MUSIC_ID, DEVICE_ID, CREATE_TIME, VIDEO_DURATION) VALUES (" \
+                  "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" % (
+                read_count, column_list[0], column_list[1], column_list[2], column_list[3], column_list[4],
+                column_list[5], column_list[6], column_list[7], column_list[8], column_list[9],
+                self.one_hot_create_time(column_list[10]), self.one_hot_video_duration(column_list[11]))
+            self.cursor.execute(sql)
+            line = track_file.readline()
+            read_count += 1
+            if read_count % 10000 == 0:
+                self.db_client.commit()
+                print(read_count)
+        track_file.close()
+
+    def get(self, record_id):
+        start = time.time()
+        sql = "SELECT * FROM USER WHERE id=%s" % record_id
+        result = list()
+        cursor = self.cursor.execute(sql)
+        # print(cursor)
+        record = None
+        for row in cursor:
+            # print(row)
+            record = row
+            # result["item_id"] = row[1]
+        # print("consume: %s" % (time.time() - start))
+        item_id = record[3]
+        finish = record[7]
+        like = record[8]
+        for i in range(len(record)):
+            if i not in [0, 3, 7, 8]:
+                result.append(record[i]+1)
+        return result, item_id, like, finish
+
+    def get_max_id(self, name):
+        start = time.time()
+        sql = "SELECT max(%s) FROM USER" % name
+        result = list()
+        cursor = self.cursor.execute(sql)
+        for row in cursor:
+            print(name, row)
+            result.append(row)
+            # result["item_id"] = row[1]
+        # print("consume: %s" % (time.time() - start))
+        return result[0][0]
+
+    def get_features_size(self):
+        feature_size_list = list()
+        for i in ["UID", "USER_CITY", "AUTHOR_ID", "ITEM_CITY", "CHANNEL",  "MUSIC_ID",
+                  "DEVICE_ID", "CREATE_TIME", "VIDEO_DURATION"]:
+            max_id = self.get_max_id(i)
+            feature_size_list.append(max_id)
+        print(feature_size_list)
+
 
 if __name__ == "__main__":
-    interactive_tool = UserInteractiveTool("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.txt")
-    interactive_tool.one_hot_features()
-    print(interactive_tool.user_interactive_pd.to_dict())
-    interactive_tool.user_interactive_pd.to_csv("test.csv")
+    db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user_test.db"
+    interactive_tool = UserInteractiveTool(db_path)
+    # interactive_tool.create_table()
+    # interactive_tool.create_table()
+    interactive_tool.insert("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_test_no_anwser.txt")
+    # print(interactive_tool.get_max_id())
+    # print(interactive_tool.get(100))
+    # print(interactive_tool.get_features_size())
+    # for i in ["ID", "UID", "USER_CITY", "ITEM_ID", "AUTHOR_ID", "ITEM_CITY", "CHANNEL", "FINISH", "LIKE", "MUSIC_ID",
+    #           "DEVICE_ID", "CREATE_TIME", "VIDEO_DURATION"]:
+    #     interactive_tool.get_max_id(i)
