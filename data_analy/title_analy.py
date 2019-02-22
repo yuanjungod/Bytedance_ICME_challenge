@@ -11,6 +11,7 @@ class TitleAnalyTool(object):
         # /Volumes/Seagate Expansion Drive/byte/track2/track2_title.txt
         self.db_client = sqlite3.connect(title_db_path)
         self.cursor = self.db_client.cursor()
+        self.result_dict = None
 
     def create_table(self):
         sql = '''CREATE TABLE TITLE
@@ -41,15 +42,29 @@ class TitleAnalyTool(object):
                 print(count)
         title_file.close()
 
-    def get(self, item_id):
+    def get_all(self):
         start = time.time()
-        sql = "SELECT * FROM TITLE WHERE ITEM_ID=%s" % item_id
-        result = list()
+        sql = "SELECT * FROM TITLE"
         cursor = self.cursor.execute(sql)
         for row in cursor:
-            result = [int(i) for i in json.loads(row[1])]
-        # print("consume: %s" % (time.time() - start))
-        return result
+            self.result_dict[row[0]] = [int(i) for i in json.loads(row[1])]
+        print("title consume", time.time() - start)
+
+    def get(self, item_id):
+        if self.result_dict is None:
+            self.get_all()
+        return self.result_dict[item_id]
+
+
+    # def get(self, item_id):
+    #     start = time.time()
+    #     sql = "SELECT * FROM TITLE WHERE ITEM_ID=%s" % item_id
+    #     result = list()
+    #     cursor = self.cursor.execute(sql)
+    #     for row in cursor:
+    #         result = [int(i) for i in json.loads(row[1])]
+    #     # print("consume: %s" % (time.time() - start))
+    #     return result
 
     def get_title_feature_size(self):
         start = time.time()
