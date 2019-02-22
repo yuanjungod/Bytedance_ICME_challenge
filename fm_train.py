@@ -37,8 +37,8 @@ for result in os.listdir("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jso
     fp = open(os.path.join("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons", result), "r")
     result = json.load(fp)
     fp.close()
-    print("%s data load finished" % count, time.time() - load_data_time)
-    print(result["index"][0])
+    # print("%s data load finished" % count, time.time() - load_data_time)
+    # print(result["index"][0])
     deep_fm.fit2(model, optimizer, criterion, result["index"], result["value"], result["video"], result["title"],
                  result["title_value"], result["like"], result["finish"], count,
                  save_path="/Users/quantum/code/Bytedance_ICME_challenge/ibyte.model")
