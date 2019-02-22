@@ -417,7 +417,7 @@ class DeepFM(torch.nn.Module):
                     batch_begin_time = time()
             if self.total_count % 100 == 0:
                 print("total count", self.total_count)
-            if save_path and self.total_count % 20000 == 0:
+            if save_path and self.total_count % 200 == 0:
                 torch.save(self.state_dict(), os.path.join(save_path, "byte_%s.model" % self.total_count))
 
         train_loss, train_eval = self.eval_by_batch(Xi_train, Xv_train, y_train, x_size, video_feature, title_feature, title_value)
