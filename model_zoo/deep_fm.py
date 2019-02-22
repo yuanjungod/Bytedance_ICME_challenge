@@ -283,7 +283,7 @@ class DeepFM(torch.nn.Module):
             # print(deep_emb.shape)
 
             if self.deep_layers_activation == 'sigmoid':
-                activation = F.sigmoid
+                activation = torch.sigmoid
             elif self.deep_layers_activation == 'tanh':
                 activation = F.tanh
             else:
@@ -609,7 +609,7 @@ class DeepFM(torch.nn.Module):
                     batch_xi.cuda(), batch_xv.cuda(), batch_y.cuda(), batch_video_feature.cuda(),\
                     batch_title_feature.cuda(), batch_title_value.cuda()
             outputs = model(batch_xi, batch_xv, batch_video_feature, batch_title_feature, batch_title_value)
-            pred = F.sigmoid(outputs).cpu()
+            pred = torch.sigmoid(outputs).cpu()
             y_pred.extend(pred.data.numpy())
             loss = criterion(outputs, batch_y)
             total_loss += loss.data * (end - offset)
@@ -652,7 +652,7 @@ class DeepFM(torch.nn.Module):
             Xi, Xv = Xi.cuda(), Xv.cuda()
 
         model = self.eval()
-        pred = F.sigmoid(model(Xi, Xv)).cpu()
+        pred = torch.sigmoid(model(Xi, Xv)).cpu()
         return (pred.data.numpy() > 0.5)
 
     def predict_proba(self, Xi, Xv):
@@ -663,7 +663,7 @@ class DeepFM(torch.nn.Module):
             Xi, Xv = Xi.cuda(), Xv.cuda()
 
         model = self.eval()
-        pred = F.sigmoid(model(Xi, Xv)).cpu()
+        pred = torch.sigmoid(model(Xi, Xv)).cpu()
         return pred.data.numpy()
 
     def inner_predict(self, Xi, Xv):
@@ -673,7 +673,7 @@ class DeepFM(torch.nn.Module):
         :return: output, numpy
         """
         model = self.eval()
-        pred = F.sigmoid(model(Xi, Xv)).cpu()
+        pred = torch.sigmoid(model(Xi, Xv)).cpu()
         return (pred.data.numpy() > 0.5)
 
     def inner_predict_proba(self, Xi, Xv, video_feature, title_feature, title_value):
@@ -683,7 +683,7 @@ class DeepFM(torch.nn.Module):
         :return: output, numpy
         """
         model = self.eval()
-        pred = F.sigmoid(model(Xi, Xv, video_feature, title_feature, title_value)).cpu()
+        pred = torch.sigmoid(model(Xi, Xv, video_feature, title_feature, title_value)).cpu()
         return pred.data.numpy()
 
     def evaluate(self, Xi, Xv, video_feature, title_feature, title_value, y):
