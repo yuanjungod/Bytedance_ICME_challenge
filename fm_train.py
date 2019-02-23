@@ -7,7 +7,9 @@ import os
 import json
 from model_zoo.focal_loss import FocalLoss
 import random
+import logging
 
+# 通过下面的方式进行简单配置输出方式与日志级别
 
 video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
 title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
@@ -17,6 +19,8 @@ user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 task = "like"
 deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, task, embedding_size=64)
+
+logging.basicConfig(filename='%s_logger.log' % task, level=logging.INFO)
 
 """
     train model
@@ -43,6 +47,7 @@ for epoch in range(5):
     elif model.optimizer_type == 'adag':
         optimizer = torch.optim.Adagrad(model.parameters(), lr=model.learning_rate/(epoch+1), weight_decay=model.weight_decay)
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
+    logging.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
     for result in os.listdir("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons"):
         fp = open(os.path.join("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons", result), "r")
         result = json.load(fp)
