@@ -11,11 +11,7 @@ from model_zoo.focal_loss import FocalLoss
 # video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
 # title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
-video_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/video.db"
-title_feature_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/title.db"
-user_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/user.db"
-deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, "like")
-task = "finish"
+task = "like"
 deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, task, embedding_size=64)
 
 """
