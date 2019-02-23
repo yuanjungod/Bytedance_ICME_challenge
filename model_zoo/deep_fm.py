@@ -321,7 +321,8 @@ class DeepFM(torch.nn.Module):
 
     def fit2(self, model, optimizer, criterion, Xi_train, Xv_train, video_feature, title_feature, title_value,
              y_like_train, y_finish_train, count, Xi_valid=None,
-             Xv_valid=None, y_like_valid=None, y_finish_valid=None, ealry_stopping=False, save_path=None):
+             Xv_valid=None, y_like_valid=None, y_finish_valid=None, video_feature_val=None, title_feature_val=None,
+             title_value_val=None, ealry_stopping=False, save_path=None):
 
         # if save_path and not os.path.exists('/'.join(save_path.split('/')[0:-1])):
         #     print("Save path is not existed!")
@@ -428,12 +429,13 @@ class DeepFM(torch.nn.Module):
         print('*' * 50)
 
         if is_valid:
-            valid_loss, valid_eval = self.eval_by_batch(Xi_valid, Xv_valid, y_valid, x_valid_size)
-            valid_result.append(valid_eval)
-            print('*' * 50)
+            valid_loss, valid_eval = self.eval_by_batch(Xi_valid, Xv_valid, y_valid, x_valid_size,
+                                                        video_feature_val, title_feature_val, title_value_val)
+            # valid_result.append(valid_eval)
+            print('valid*' * 20)
             print('[%d] loss: %.6f metric: %.6f time: %.1f s' %
                   (count + 1, valid_loss, valid_eval, time() - epoch_begin_time))
-            print('*' * 50)
+            print('valid*' * 20)
 
     def eval_by_batch(self, Xi, Xv, y, x_size, video_feature, title_feature, title_value):
         total_loss = 0.0
