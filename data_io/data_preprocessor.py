@@ -21,7 +21,7 @@ class DataPreprocessor(object):
         self.user_interactive_tool = UserInteractiveTool(user_db_path)
 
     def get_train_data(self):
-        result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
+        result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [], 'item_id': [],
                   "video": [], 'feature_sizes': self.FEATURE_SIZES, 'tile_word_size': self.title_feature_tool.MAX_WORD}
         step = 10000
         for i in range(0, self.user_interactive_tool.get_max_id("ID"), step):
@@ -29,6 +29,7 @@ class DataPreprocessor(object):
             users = self.user_interactive_tool.get(i, i+step)
             for user in users:
                 user_action, item_id, like, finish = user
+                result['item_id'].append(item_id)
                 result['like'].append(like)
                 result['finish'].append(finish)
                 result['index'].append(user_action)
@@ -38,7 +39,7 @@ class DataPreprocessor(object):
                 result['title_value'].append([1 if i < len(title_list) else 0 for i in range(30)])
                 result['video'].append(self.video_feature_tool.get_video_embedding(item_id))
             yield result
-            result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
+            result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [], 'item_id': [],
                       "video": [], 'feature_sizes': self.FEATURE_SIZES,
                       'tile_word_size': self.title_feature_tool.MAX_WORD}
 

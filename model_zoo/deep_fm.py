@@ -26,6 +26,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 
 import torch.backends.cudnn
+import logging
 
 """
     网络结构部分
@@ -210,6 +211,21 @@ class DeepFM(torch.nn.Module):
         """
             fm part
         """
+
+        """
+           video and title
+        """
+        video_feature = self.video_line(video_feature)
+
+        title_embedding = self.title_embedding(title_feature)
+        title_embedding = title_embedding * title_value
+        title_embedding = title_embedding.permute(0, 2, 1)
+        title_embedding = torch.sum(title_embedding, -1)
+
+        """
+           video and title end
+        """
+
         if self.use_fm:
             # print("test", Xi[:, 0, :])
             # exit()
@@ -229,6 +245,10 @@ class DeepFM(torch.nn.Module):
             # use 2xy = (x+y)^2 - x^2 - y^2 reduce calculation
             fm_second_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
                                        enumerate(self.fm_second_order_embeddings)]
+
+            fm_second_order_emb_arr.append(video_feature)
+            fm_second_order_emb_arr.append(title_embedding)
+
             fm_sum_second_order_emb = sum(fm_second_order_emb_arr)
             # print("sum", fm_sum_second_order_emb.size())
             # exit()
@@ -272,16 +292,15 @@ class DeepFM(torch.nn.Module):
                 deep_emb = torch.cat([(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
                                       enumerate(self.fm_second_order_embeddings)], 1)
 
-            if video_feature is not None:
-                video_feature = self.video_line(video_feature)
-                deep_emb = torch.cat([deep_emb, video_feature], 1)
-
-            title_embedding = self.title_embedding(title_feature)
-            title_embedding = title_embedding*title_value
-            title_embedding = title_embedding.permute(0, 2, 1)
-            title_embedding = torch.sum(title_embedding, -1)
-            deep_emb = torch.cat([deep_emb, title_embedding], 1)
-            # print(deep_emb.shape)
+            # if video_feature is not None:
+            #     video_feature = self.video_line(video_feature)
+            #     deep_emb = torch.cat([deep_emb, video_feature], 1)
+            #
+            # title_embedding = self.title_embedding(title_feature)
+            # title_embedding = title_embedding*title_value
+            # title_embedding = title_embedding.permute(0, 2, 1)
+            # title_embedding = torch.sum(title_embedding, -1)
+            # deep_emb = torch.cat([deep_emb, title_embedding], 1)
 
             if self.deep_layers_activation == 'sigmoid':
                 activation = torch.sigmoid
@@ -429,8 +448,10 @@ class DeepFM(torch.nn.Module):
         train_loss, train_eval = self.eval_by_batch(Xi_train, Xv_train, y_train, x_size, video_feature, title_feature, title_value)
         train_result.append(train_eval)
         print('*' * 50)
-        print('[%d] loss: %.6f metric: %.6f time: %.1f s' %
+        print('train [%d] loss: %.6f metric: %.6f time: %.1f s' %
               (count + 1, train_loss, train_eval, time() - epoch_begin_time))
+        logging.info('train [%d] loss: %.6f metric: %.6f time: %.1f s' % (
+            count + 1, train_loss, train_eval, time() - epoch_begin_time))
         print('*' * 50)
 
         if is_valid:
@@ -438,8 +459,10 @@ class DeepFM(torch.nn.Module):
                                                         video_feature_val, title_feature_val, title_value_val)
             # valid_result.append(valid_eval)
             print('valid*' * 20)
-            print('[%d] loss: %.6f metric: %.6f time: %.1f s' %
+            print('val [%d] loss: %.6f metric: %.6f time: %.1f s' %
                   (count + 1, valid_loss, valid_eval, time() - epoch_begin_time))
+            logging.info('val [%d] loss: %.6f metric: %.6f time: %.1f s' % (
+                count + 1, valid_loss, valid_eval, time() - epoch_begin_time))
             print('valid*' * 20)
 
     def eval_by_batch(self, Xi, Xv, y, x_size, video_feature, title_feature, title_value):
