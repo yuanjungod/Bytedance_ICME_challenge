@@ -26,8 +26,8 @@ model = deep_fm.train()
 # deep_fm.load_state_dict(torch.load(model_path))
 model.cuda(0)
 
-criterion = FocalLoss(2)
-# criterion = F.binary_cross_entropy_with_logits
+# criterion = FocalLoss(2)
+criterion = F.binary_cross_entropy_with_logits
 
 count = 0
 load_data_time = time.time()
