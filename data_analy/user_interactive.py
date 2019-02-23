@@ -131,7 +131,7 @@ class UserInteractiveTool(object):
 
     def get(self, record_id_1, record_id_2):
         start = time.time()
-        sql = "SELECT * FROM USER WHERE id>=%s and id < %s" % (record_id_1, record_id_2)
+        sql = "SELECT * FROM USER_TEST WHERE id>=%s and id < %s" % (record_id_1, record_id_2)
         result = list()
         cursor = self.cursor.execute(sql)
         print("user consume", time.time() - start)
@@ -152,7 +152,7 @@ class UserInteractiveTool(object):
 
     def get_max_id(self, name):
         start = time.time()
-        sql = "SELECT max(%s) FROM USER" % name
+        sql = "SELECT max(%s) FROM USER_TEST" % name
         result = list()
         cursor = self.cursor.execute(sql)
         for row in cursor:
