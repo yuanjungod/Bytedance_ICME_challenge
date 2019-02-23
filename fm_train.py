@@ -18,7 +18,8 @@ user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 # title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 task = "like"
-deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, task, embedding_size=64)
+deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, task,
+                 embedding_size=64, learning_rate=0.001, weight_decay=0.00005)
 
 logging.basicConfig(filename='%s_logger.log' % task, level=logging.INFO)
 
@@ -38,14 +39,14 @@ criterion = F.binary_cross_entropy_with_logits
 
 count = 0
 load_data_time = time.time()
-for epoch in range(5):
-    optimizer = torch.optim.SGD(model.parameters(), lr=model.learning_rate/(epoch+1), weight_decay=model.weight_decay)
+for epoch in range(3):
+    optimizer = torch.optim.SGD(model.parameters(), lr=model.learning_rate/(10**epoch), weight_decay=model.weight_decay)
     if model.optimizer_type == 'adam':
-        optimizer = torch.optim.Adam(model.parameters(), lr=model.learning_rate/(epoch+1), weight_decay=model.weight_decay)
+        optimizer = torch.optim.Adam(model.parameters(), lr=model.learning_rate/(10**epoch), weight_decay=model.weight_decay)
     elif model.optimizer_type == 'rmsp':
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=model.learning_rate/(epoch+1), weight_decay=model.weight_decay)
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=model.learning_rate/(10**epoch), weight_decay=model.weight_decay)
     elif model.optimizer_type == 'adag':
-        optimizer = torch.optim.Adagrad(model.parameters(), lr=model.learning_rate/(epoch+1), weight_decay=model.weight_decay)
+        optimizer = torch.optim.Adagrad(model.parameters(), lr=model.learning_rate/(10**epoch), weight_decay=model.weight_decay)
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
     logging.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
     for result in os.listdir("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons"):
