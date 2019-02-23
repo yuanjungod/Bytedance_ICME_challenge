@@ -6,6 +6,7 @@ import time
 import os
 import json
 from model_zoo.focal_loss import FocalLoss
+import random
 
 
 video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
@@ -24,6 +25,9 @@ model = deep_fm.train()
 # model_path = 'params.pkl'
 # deep_fm.load_state_dict(torch.load(model_path))
 model.cuda(0)
+test_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/val_jsons"
+test_file_list = [os.path.join(test_dir, i) for i in os.listdir(test_dir)]
+
 
 # criterion = FocalLoss(2)
 criterion = F.binary_cross_entropy_with_logits
@@ -43,11 +47,20 @@ for epoch in range(5):
         fp = open(os.path.join("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons", result), "r")
         result = json.load(fp)
         fp.close()
+
+        val_fp = open(random.choice(test_file_list), "r")
+        val_result = json.load(val_fp)
+        val_fp.close()
+
         # print("%s data load finished" % count, time.time() - load_data_time)
         # print(result["index"][0])
         deep_fm.fit2(model, optimizer, criterion, result["index"], result["value"], result["video"], result["title"],
                      result["title_value"], result["like"], result["finish"], count,
-                     save_path="/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/%s" % task)
+                     save_path="/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/%s" % task,
+                     Xi_valid=val_result["index"], Xv_valid=val_result["value"],
+                     y_like_valid=val_result["like"], y_finish_valid=val_result["finish"],
+                     video_feature_val=val_result["video"], title_feature_val=val_result["title"],
+                     title_value_val=val_result["title_value"])
         count += 1
         load_data_time = time.time()
 
