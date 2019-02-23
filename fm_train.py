@@ -32,13 +32,13 @@ criterion = FocalLoss(2)
 count = 0
 load_data_time = time.time()
 for epoch in range(5):
-    optimizer = torch.optim.SGD(model.parameters(), lr=model.learning_rate/epoch, weight_decay=model.weight_decay)
+    optimizer = torch.optim.SGD(model.parameters(), lr=model.learning_rate/(epoch+1), weight_decay=model.weight_decay)
     if model.optimizer_type == 'adam':
-        optimizer = torch.optim.Adam(model.parameters(), lr=model.learning_rate/epoch, weight_decay=model.weight_decay)
+        optimizer = torch.optim.Adam(model.parameters(), lr=model.learning_rate/(epoch+1), weight_decay=model.weight_decay)
     elif model.optimizer_type == 'rmsp':
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=model.learning_rate/epoch, weight_decay=model.weight_decay)
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=model.learning_rate/(epoch+1), weight_decay=model.weight_decay)
     elif model.optimizer_type == 'adag':
-        optimizer = torch.optim.Adagrad(model.parameters(), lr=model.learning_rate/epoch, weight_decay=model.weight_decay)
+        optimizer = torch.optim.Adagrad(model.parameters(), lr=model.learning_rate/(epoch+1), weight_decay=model.weight_decay)
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
     for result in os.listdir("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons"):
         fp = open(os.path.join("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons", result), "r")
