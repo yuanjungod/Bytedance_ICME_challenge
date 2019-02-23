@@ -351,6 +351,11 @@ class DeepFM(torch.nn.Module):
         if Xi_valid:
             Xi_valid = np.array(Xi_valid).reshape((-1, self.field_size, 1))
             Xv_valid = np.array(Xv_valid)
+
+            title_feature_val = np.array(title_feature_val)
+            title_value_val = [[[j for _ in range(self.embedding_size)] for j in i] for i in title_value_val]
+            title_value_val = np.array(title_value_val)
+
             y_like_valid = np.array(y_like_valid)
             y_finish_valid = np.array(y_finish_valid)
             if self.target == "finish":
