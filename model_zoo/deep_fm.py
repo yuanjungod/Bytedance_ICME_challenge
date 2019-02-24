@@ -537,9 +537,16 @@ class DeepFM(torch.nn.Module):
         Xi = np.array(Xi).reshape((-1, self.field_size, 1))
         Xi = Variable(torch.LongTensor(Xi))
         Xv = Variable(torch.FloatTensor(Xv))
+
+        video_feature = np.array(video_feature)
         video_feature = Variable(torch.FloatTensor(video_feature))
-        title_value = Variable(torch.FloatTensor(title_value))
+
+        title_feature = np.array(title_feature)
         title_feature = Variable(torch.LongTensor(title_feature))
+
+        title_value = [[[j for _ in range(self.embedding_size)] for j in i] for i in title_value]
+        title_value = np.array(title_value)
+        title_value = Variable(torch.FloatTensor(title_value))
 
         if self.use_cuda:
             Xi, Xv, video_feature, title_value, title_feature = \
