@@ -352,6 +352,7 @@ class DeepFM(torch.nn.Module):
         # if save_path and not os.path.exists('/'.join(save_path.split('/')[0:-1])):
         #     print("Save path is not existed!")
         #     return
+        self.train()
 
         if self.verbose:
             print("pre_process data ing...")
