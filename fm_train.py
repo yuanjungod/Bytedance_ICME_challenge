@@ -20,7 +20,7 @@ user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 task = "like"
 deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, task,
-                 embedding_size=32, learning_rate=0.001)
+                 embedding_size=64, learning_rate=0.001, is_batch_norm=True)
 
 logging.basicConfig(filename='%s_logger.log' % task, level=logging.INFO)
 
