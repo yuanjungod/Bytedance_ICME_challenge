@@ -294,12 +294,18 @@ class DeepFM(torch.nn.Module):
 
             if video_feature is not None:
                 video_feature = self.video_line(video_feature)
+
+                video_feature = F.relu(video_feature)
+
                 deep_emb = torch.cat([deep_emb, video_feature], 1)
 
             title_embedding = self.title_embedding(title_feature)
             title_embedding = title_embedding*title_value
             title_embedding = title_embedding.permute(0, 2, 1)
             title_embedding = torch.sum(title_embedding, -1)
+
+            title_embedding = F.relu(title_embedding)
+
             deep_emb = torch.cat([deep_emb, title_embedding], 1)
 
             if self.deep_layers_activation == 'sigmoid':
