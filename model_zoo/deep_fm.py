@@ -212,19 +212,19 @@ class DeepFM(torch.nn.Module):
             fm part
         """
 
-        """
-           video and title
-        """
-        video_feature = self.video_line(video_feature)
-
-        title_embedding = self.title_embedding(title_feature)
-        title_embedding = title_embedding * title_value
-        title_embedding = title_embedding.permute(0, 2, 1)
-        title_embedding = torch.sum(title_embedding, -1)
-
-        """
-           video and title end
-        """
+        # """
+        #    video and title
+        # """
+        # video_feature = self.video_line(video_feature)
+        #
+        # title_embedding = self.title_embedding(title_feature)
+        # title_embedding = title_embedding * title_value
+        # title_embedding = title_embedding.permute(0, 2, 1)
+        # title_embedding = torch.sum(title_embedding, -1)
+        #
+        # """
+        #    video and title end
+        # """
 
         if self.use_fm:
             # print("test", Xi[:, 0, :])
@@ -246,8 +246,8 @@ class DeepFM(torch.nn.Module):
             fm_second_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
                                        enumerate(self.fm_second_order_embeddings)]
 
-            fm_second_order_emb_arr.append(video_feature)
-            fm_second_order_emb_arr.append(title_embedding)
+            # fm_second_order_emb_arr.append(video_feature)
+            # fm_second_order_emb_arr.append(title_embedding)
 
             fm_sum_second_order_emb = sum(fm_second_order_emb_arr)
             # print("sum", fm_sum_second_order_emb.size())
@@ -292,15 +292,15 @@ class DeepFM(torch.nn.Module):
                 deep_emb = torch.cat([(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
                                       enumerate(self.fm_second_order_embeddings)], 1)
 
-            # if video_feature is not None:
-            #     video_feature = self.video_line(video_feature)
-            #     deep_emb = torch.cat([deep_emb, video_feature], 1)
-            #
-            # title_embedding = self.title_embedding(title_feature)
-            # title_embedding = title_embedding*title_value
-            # title_embedding = title_embedding.permute(0, 2, 1)
-            # title_embedding = torch.sum(title_embedding, -1)
-            # deep_emb = torch.cat([deep_emb, title_embedding], 1)
+            if video_feature is not None:
+                video_feature = self.video_line(video_feature)
+                deep_emb = torch.cat([deep_emb, video_feature], 1)
+
+            title_embedding = self.title_embedding(title_feature)
+            title_embedding = title_embedding*title_value
+            title_embedding = title_embedding.permute(0, 2, 1)
+            title_embedding = torch.sum(title_embedding, -1)
+            deep_emb = torch.cat([deep_emb, title_embedding], 1)
 
             if self.deep_layers_activation == 'sigmoid':
                 activation = torch.sigmoid
