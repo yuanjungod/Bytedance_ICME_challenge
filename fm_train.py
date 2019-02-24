@@ -24,8 +24,8 @@ logging.basicConfig(filename='%s_logger.log' % task, level=logging.INFO)
     train model
 """
 model = deep_fm.train()
-model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/like/20190224/byte_90000.model'
-deep_fm.load_state_dict(torch.load(model_path))
+# model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/like/20190224/byte_90000.model'
+# deep_fm.load_state_dict(torch.load(model_path))
 model.cuda(0)
 test_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/val_jsons"
 test_file_list = [os.path.join(test_dir, i) for i in os.listdir(test_dir)]
