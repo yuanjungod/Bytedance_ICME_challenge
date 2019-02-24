@@ -8,6 +8,7 @@ import json
 from model_zoo.focal_loss import FocalLoss
 import random
 import logging
+from utils.utils import rand_train_data
 
 # 通过下面的方式进行简单配置输出方式与日志级别
 
@@ -53,6 +54,8 @@ for epoch in range(3):
         fp = open(os.path.join("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons", result), "r")
         result = json.load(fp)
         fp.close()
+
+        result = rand_train_data(result)
 
         val_fp = open(random.choice(test_file_list), "r")
         val_result = json.load(val_fp)
