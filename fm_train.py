@@ -16,7 +16,7 @@ import logging
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 task = "like"
 deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, task,
-                 embedding_size=64, learning_rate=0.003, weight_decay=0.00005)
+                 embedding_size=64, learning_rate=0.0005, weight_decay=0.00005)
 
 logging.basicConfig(filename='%s_logger.log' % task, level=logging.INFO)
 
