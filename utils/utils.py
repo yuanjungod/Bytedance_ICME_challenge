@@ -16,7 +16,7 @@ def get_dataset_path_list(dataset_path, sub_str=None):
 
 
 def rand_train_data(result):
-    index_list = range(len(result["index"]))
+    index_list = list(range(len(result["index"])))
     random.shuffle(index_list)
     result_index = [result["index"][i] for i in index_list]
     result_value = [result["value"][i] for i in index_list]
