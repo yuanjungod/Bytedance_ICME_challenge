@@ -28,12 +28,12 @@ model = deep_fm.train()
 # model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/finish/byte_115000.model'
 # deep_fm.load_state_dict(torch.load(model_path))
 model.cuda(0)
-# test_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/val_jsons"
-test_dir = "/Volumes/Seagate Expansion Drive/byte/track2/val_jsons"
+test_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/val_jsons"
+# test_dir = "/Volumes/Seagate Expansion Drive/byte/track2/val_jsons"
 test_file_list = [os.path.join(test_dir, i) for i in os.listdir(test_dir)]
 
-# train_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons"
-train_dir = "/Volumes/Seagate Expansion Drive/byte/track2/jsons"
+train_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons"
+# train_dir = "/Volumes/Seagate Expansion Drive/byte/track2/jsons"
 
 # criterion = FocalLoss(2, gamma=0)
 criterion = F.binary_cross_entropy_with_logits
