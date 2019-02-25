@@ -17,7 +17,7 @@ from utils.utils import rand_train_data
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 task = "like"
 deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, task,
-                 embedding_size=64, learning_rate=0.001, is_batch_norm=True)
+                 embedding_size=64, learning_rate=0.003)
 
 logging.basicConfig(filename='%s_logger.log' % task, level=logging.INFO)
 
@@ -28,27 +28,35 @@ model = deep_fm.train()
 # model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/finish/byte_115000.model'
 # deep_fm.load_state_dict(torch.load(model_path))
 model.cuda(0)
-test_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/val_jsons"
+# test_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/val_jsons"
+test_dir = "/Volumes/Seagate Expansion Drive/byte/track2/val_jsons"
 test_file_list = [os.path.join(test_dir, i) for i in os.listdir(test_dir)]
 
+# train_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons"
+train_dir = "/Volumes/Seagate Expansion Drive/byte/track2/jsons"
 
-# criterion = FocalLoss(2)
+# criterion = FocalLoss(2, gamma=0)
 criterion = F.binary_cross_entropy_with_logits
 
 count = 0
 load_data_time = time.time()
-for epoch in range(3):
-    optimizer = torch.optim.SGD(model.parameters(), lr=model.learning_rate/(10**epoch), weight_decay=model.weight_decay)
-    if model.optimizer_type == 'adam':
-        optimizer = torch.optim.Adam(model.parameters(), lr=model.learning_rate/(10**epoch), weight_decay=model.weight_decay)
-    elif model.optimizer_type == 'rmsp':
-        optimizer = torch.optim.RMSprop(model.parameters(), lr=model.learning_rate/(10**epoch), weight_decay=model.weight_decay)
-    elif model.optimizer_type == 'adag':
-        optimizer = torch.optim.Adagrad(model.parameters(), lr=model.learning_rate/(10**epoch), weight_decay=model.weight_decay)
+
+optimizer = torch.optim.SGD(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
+if model.optimizer_type == 'adam':
+    optimizer = torch.optim.Adam(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
+elif model.optimizer_type == 'rmsp':
+    optimizer = torch.optim.RMSprop(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
+elif model.optimizer_type == 'adag':
+    optimizer = torch.optim.Adagrad(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
+
+total_epochs = 3
+
+for epoch in range(total_epochs):
+
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
     logging.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
-    for result in os.listdir("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons"):
-        fp = open(os.path.join("/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons", result), "r")
+    for result in os.listdir(train_dir):
+        fp = open(os.path.join(train_dir, result), "r")
         result = json.load(fp)
         fp.close()
 
@@ -66,7 +74,7 @@ for epoch in range(3):
                      Xi_valid=val_result["index"], Xv_valid=val_result["value"],
                      y_like_valid=val_result["like"], y_finish_valid=val_result["finish"],
                      video_feature_val=val_result["video"], title_feature_val=val_result["title"],
-                     title_value_val=val_result["title_value"])
+                     title_value_val=val_result["title_value"], total_epochs=total_epochs)
         count += 1
         load_data_time = time.time()
 
