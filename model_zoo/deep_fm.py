@@ -24,7 +24,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
-
+from utils.utils import warmup_linear
 import torch.backends.cudnn
 import logging
 
@@ -292,10 +292,17 @@ class DeepFM(torch.nn.Module):
                 deep_emb = torch.cat([(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
                                       enumerate(self.fm_second_order_embeddings)], 1)
 
+            if self.deep_layers_activation == 'sigmoid':
+                activation = torch.sigmoid
+            elif self.deep_layers_activation == 'tanh':
+                activation = F.tanh
+            else:
+                activation = F.relu
+
             if video_feature is not None:
                 video_feature = self.video_line(video_feature)
 
-                video_feature = F.relu(video_feature)
+                video_feature = activation(video_feature)
 
                 deep_emb = torch.cat([deep_emb, video_feature], 1)
 
@@ -304,16 +311,10 @@ class DeepFM(torch.nn.Module):
             title_embedding = title_embedding.permute(0, 2, 1)
             title_embedding = torch.sum(title_embedding, -1)
 
-            title_embedding = F.relu(title_embedding)
+            title_embedding = activation(title_embedding)
 
             deep_emb = torch.cat([deep_emb, title_embedding], 1)
 
-            if self.deep_layers_activation == 'sigmoid':
-                activation = torch.sigmoid
-            elif self.deep_layers_activation == 'tanh':
-                activation = F.tanh
-            else:
-                activation = F.relu
             if self.is_deep_dropout:
                 deep_emb = self.linear_0_dropout(deep_emb)
             x_deep = self.linear_1(deep_emb)
@@ -347,7 +348,7 @@ class DeepFM(torch.nn.Module):
     def fit2(self, model, optimizer, criterion, Xi_train, Xv_train, video_feature, title_feature, title_value,
              y_like_train, y_finish_train, count, Xi_valid=None,
              Xv_valid=None, y_like_valid=None, y_finish_valid=None, video_feature_val=None, title_feature_val=None,
-             title_value_val=None, ealry_stopping=False, save_path=None):
+             title_value_val=None, ealry_stopping=False, save_path=None, total_epochs=3):
 
         # if save_path and not os.path.exists('/'.join(save_path.split('/')[0:-1])):
         #     print("Save path is not existed!")
@@ -396,8 +397,6 @@ class DeepFM(torch.nn.Module):
         if self.verbose:
             print("pre_process data finished")
 
-        train_result = []
-        valid_result = []
         total_loss = 0.0
         batch_iter = x_size // self.batch_size
         epoch_begin_time = time()
@@ -437,8 +436,13 @@ class DeepFM(torch.nn.Module):
                 return
             loss = criterion(outputs, batch_y)
             loss.backward()
-            optimizer.step()
 
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = self.learning_rate*warmup_linear(self.total_count/(
+                        20000000*total_epochs/self.batch_size))
+
+            optimizer.step()
+            # print(loss)
             total_loss += loss.data
             if self.verbose:
                 if i % 100 == 99:  # print every 100 mini-batches
@@ -453,7 +457,6 @@ class DeepFM(torch.nn.Module):
                 torch.save(self.state_dict(), os.path.join(save_path, "byte_%s.model" % self.total_count))
 
         train_loss, train_eval = self.eval_by_batch(Xi_train, Xv_train, y_train, x_size, video_feature, title_feature, title_value)
-        train_result.append(train_eval)
         print('*' * 50)
         print('train [%d] loss: %.6f metric: %.6f time: %.1f s' %
               (count + 1, train_loss, train_eval, time() - epoch_begin_time))
@@ -498,10 +501,12 @@ class DeepFM(torch.nn.Module):
                     batch_xi.cuda(), batch_xv.cuda(), batch_y.cuda(), batch_video_feature.cuda(),\
                     batch_title_feature.cuda(), batch_title_value.cuda()
             outputs = model(batch_xi, batch_xv, batch_video_feature, batch_title_feature, batch_title_value)
+            print("outputs", outputs)
             pred = torch.sigmoid(outputs).cpu()
             y_pred.extend(pred.data.numpy())
             loss = criterion(outputs, batch_y)
             total_loss += loss.data * (end - offset)
+        print("y_pred", y_pred)
         total_metric = self.eval_metric(y, y_pred)
         return total_loss / x_size, total_metric
 
