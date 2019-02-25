@@ -501,12 +501,12 @@ class DeepFM(torch.nn.Module):
                     batch_xi.cuda(), batch_xv.cuda(), batch_y.cuda(), batch_video_feature.cuda(),\
                     batch_title_feature.cuda(), batch_title_value.cuda()
             outputs = model(batch_xi, batch_xv, batch_video_feature, batch_title_feature, batch_title_value)
-            print("outputs", outputs)
+            # print("outputs", outputs)
             pred = torch.sigmoid(outputs).cpu()
             y_pred.extend(pred.data.numpy())
             loss = criterion(outputs, batch_y)
             total_loss += loss.data * (end - offset)
-        print("y_pred", y_pred)
+        # print("y_pred", y_pred)
         total_metric = self.eval_metric(y, y_pred)
         return total_loss / x_size, total_metric
 
