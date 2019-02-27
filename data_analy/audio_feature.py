@@ -8,9 +8,15 @@ class AudioFeatureTool(object):
 
     def get_all_from_origin_file(self, audio_file_path):
         video_file = open(audio_file_path, 'r')
-        for line in video_file.readlines():
+        line = video_file.readline()
+        count = 0
+        while line:
+            count += 1
+            if count % 1000000 == 0:
+                print("audio", count)
+            # print(line)
             item = json.loads(line)
-            self.audio_dict[item["item_id"]] = item["video_feature_dim_128"]
+            self.audio_dict[item["item_id"]] = item["audio_feature_128_dim"]
         video_file.close()
         return self.audio_dict
 
