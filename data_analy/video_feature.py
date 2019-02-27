@@ -42,6 +42,7 @@ class VideoFeature(object):
             # print(line)
             item = json.loads(line)
             self.video_dict[item["item_id"]] = item["video_feature_dim_128"]
+            line = video_file.readline()
         video_file.close()
         return self.video_dict
 
