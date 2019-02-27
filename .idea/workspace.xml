@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="36d2dfc8-d9e8-4c48-a768-99b96160d3dd" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_analy/audio_feature.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_analy/audio_feature.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fm_train2.py" beforeDir="false" afterPath="$PROJECT_DIR$/fm_train2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_analy/video_feature.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_analy/video_feature.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -74,8 +73,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/data_analy/audio_feature.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="6" column="32" selection-start-line="6" selection-start-column="32" selection-end-line="6" selection-end-column="32" />
+            <state relative-caret-position="306">
+              <caret line="18" column="88" selection-start-line="18" selection-start-column="88" selection-end-line="18" selection-end-column="88" />
             </state>
           </provider>
         </entry>
@@ -108,7 +107,7 @@
         <entry file="file://$PROJECT_DIR$/data_analy/video_feature.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="222">
-              <caret line="43" column="76" lean-forward="true" selection-start-line="43" selection-start-column="76" selection-end-line="43" selection-end-column="76" />
+              <caret line="43" column="88" selection-start-line="43" selection-start-column="88" selection-end-line="43" selection-end-column="88" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -209,7 +208,7 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="97" />
+    <option name="x" value="49" />
     <option name="y" value="23" />
     <option name="width" value="1357" />
     <option name="height" value="831" />
@@ -409,7 +408,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="97" y="23" width="1357" height="831" extended-state="0" />
+    <frame x="49" y="23" width="1357" height="831" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18937126" />
@@ -793,7 +792,7 @@
     <entry file="file://$PROJECT_DIR$/data_analy/video_feature.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="222">
-          <caret line="43" column="76" lean-forward="true" selection-start-line="43" selection-start-column="76" selection-end-line="43" selection-end-column="76" />
+          <caret line="43" column="88" selection-start-line="43" selection-start-column="88" selection-end-line="43" selection-end-column="88" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>
@@ -802,8 +801,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/data_analy/audio_feature.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" column="32" selection-start-line="6" selection-start-column="32" selection-end-line="6" selection-end-column="32" />
+        <state relative-caret-position="306">
+          <caret line="18" column="88" selection-start-line="18" selection-start-column="88" selection-end-line="18" selection-end-column="88" />
         </state>
       </provider>
     </entry>
