@@ -49,9 +49,13 @@ class DataPreprocessor(object):
 
     def get_train_data_from_origin_file(self, video_path, title_path, interactive_file, audio_file_path):
         self.video_feature_tool.get_all_from_origin_file(video_path)
+        print("video init finish")
         self.audio_feature_tool.get_all_from_origin_file(audio_file_path)
+        print("audio init finish")
         self.title_feature_tool.get_all_from_origin_file(title_path)
+        print("title init finish")
         user_action_list = self.user_interactive_tool.get_all_from_origin_file(interactive_file)
+        print("user action init finish")
         train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
                         'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
                         'tile_word_size': self.title_feature_tool.MAX_WORD}
