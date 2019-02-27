@@ -56,7 +56,11 @@ class TitleAnalyTool(object):
         title_file = open(file_path, 'r')
         self.result_dict = dict()
         line = title_file.readline()
+        count = 0
         while line:
+            count += 1
+            if count % 1000000 == 0:
+                print(count)
             item = json.loads(line)
             self.result_dict[item["item_id"]] = list(item["title_features"].keys())
             line = title_file.readline()
