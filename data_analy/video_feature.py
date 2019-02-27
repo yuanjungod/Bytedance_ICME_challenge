@@ -9,7 +9,7 @@ class VideoFeature(object):
         if db_path is not None:
             self.video_connect = sqlite3.connect(db_path)
             self.cursor = self.video_connect.cursor()
-        self.vide_dict = dict()
+        self.video_dict = dict()
 
     def insert(self, video_feature_path):
         count = 0
@@ -38,15 +38,16 @@ class VideoFeature(object):
         while line:
             count += 1
             if count % 1000000 == 0:
-                print("video", count)
+                print("video", count, len(self.video_dict))
             # print(line)
             item = json.loads(line)
-            self.vide_dict[item["item_id"]] = item["video_feature_dim_128"]
+            self.video_dict[item["item_id"]] = item["video_feature_dim_128"]
+            line = video_file.readline()
         video_file.close()
-        return self.vide_dict
+        return self.video_dict
 
     def get(self, item_id):
-        return self.vide_dict.get(item_id, list())
+        return self.video_dict.get(item_id, list())
 
     def get_video_embedding(self, item_id):
         start = time.time()
