@@ -141,12 +141,12 @@ class UserInteractiveTool(object):
                 print(count)
             column_list = line.split("\t")
             current_result = list()
-            finish = column_list[6]
-            like = column_list[7]
-            item_id = column_list[2]
+            finish = int(column_list[6])
+            like = int(column_list[7])
+            item_id = int(column_list[2])
             for i in range(len(column_list)):
                 if i not in [2, 6, 7]:
-                    current_result.append(column_list[i]+1)
+                    current_result.append(int(column_list[i])+1)
             self.user_interactivate_list.append([current_result, item_id, like, finish])
             line = track_file.readline()
         track_file.close()
