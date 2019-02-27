@@ -16,7 +16,7 @@ class AudioFeatureTool(object):
                 print("audio", count, len(self.audio_dict))
             # print(line)
             item = json.loads(line)
-            self.audio_dict[item["item_id"]] = item["audio_feature_128_dim"]
+            self.audio_dict[item["item_id"]] = json.dumps(item["audio_feature_128_dim"])
             line = audio_file.readline()
         audio_file.close()
         return self.audio_dict
