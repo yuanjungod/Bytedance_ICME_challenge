@@ -134,7 +134,11 @@ class UserInteractiveTool(object):
     def get_all_from_origin_file(self, user_interactivate_path):
         track_file = open(user_interactivate_path)
         line = track_file.readline()
+        count = 0
         while line:
+            count += 1
+            if count % 1000000 == 0:
+                print(count)
             column_list = line.split("\t")
             current_result = list()
             finish = column_list[6]
