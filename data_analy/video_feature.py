@@ -6,9 +6,10 @@ import time
 class VideoFeature(object):
 
     def __init__(self, db_path):
-
-        self.video_connect = sqlite3.connect(db_path)
-        self.cursor = self.video_connect.cursor()
+        if db_path is not None:
+            self.video_connect = sqlite3.connect(db_path)
+            self.cursor = self.video_connect.cursor()
+        self.vide_dict = dict()
 
     def insert(self, video_feature_path):
         count = 0
@@ -29,6 +30,16 @@ class VideoFeature(object):
                 print(count)
         self.video_connect.commit()
         video_file.close()
+
+    def get_all_from_origin_file(self, video_feature_path):
+        video_file = open(video_feature_path, 'r')
+        for line in video_file.readlines():
+            item = json.loads(line)
+            self.vide_dict[item["item_id"]] = item["video_feature_dim_128"]
+        return self.vide_dict
+
+    def get(self, item_id):
+        return self.vide_dict.get(item_id, list())
 
     def get_video_embedding(self, item_id):
         start = time.time()

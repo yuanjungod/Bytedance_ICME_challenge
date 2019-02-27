@@ -6,8 +6,10 @@ class UserInteractiveTool(object):
 
     def __init__(self, db_path):
         # /Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.txt
-        self.db_client = sqlite3.connect(db_path)
-        self.cursor = self.db_client.cursor()
+        if db_path is not None:
+            self.db_client = sqlite3.connect(db_path)
+            self.cursor = self.db_client.cursor()
+        self.user_interactivate_list = list()
 
         # user_interactive_dict = dict()
         # user_interactive_dict['uid'] = list()
@@ -128,6 +130,21 @@ class UserInteractiveTool(object):
                 self.db_client.commit()
                 print(read_count)
         track_file.close()
+
+    def get_all_from_origin_file(self, user_interactivate_path):
+        track_file = open(user_interactivate_path)
+        for line in track_file.readlines():
+            column_list = line.split("\t")
+            current_result = list()
+            finish = column_list[6]
+            like = column_list[7]
+            item_id = column_list[2]
+            for i in range(len(column_list)):
+                if i not in [2, 6, 7]:
+                    current_result.append(column_list[i]+1)
+            self.user_interactivate_list.append([current_result, item_id, like, finish])
+        track_file.close()
+        return self.user_interactivate_list
 
     def get(self, record_id_1, record_id_2):
         start = time.time()
