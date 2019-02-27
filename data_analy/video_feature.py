@@ -36,7 +36,7 @@ class VideoFeature(object):
         line = video_file.readline()
         count = 0
         while line:
-            count += 0
+            count += 1
             if count % 1000000 == 0:
                 print("video", count)
             # print(line)
