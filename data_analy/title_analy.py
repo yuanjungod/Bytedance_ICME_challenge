@@ -9,8 +9,9 @@ class TitleAnalyTool(object):
 
     def __init__(self, title_db_path):
         # /Volumes/Seagate Expansion Drive/byte/track2/track2_title.txt
-        self.db_client = sqlite3.connect(title_db_path)
-        self.cursor = self.db_client.cursor()
+        if title_db_path is not None:
+            self.db_client = sqlite3.connect(title_db_path)
+            self.cursor = self.db_client.cursor()
         self.result_dict = None
 
     def create_table(self):
@@ -29,7 +30,6 @@ class TitleAnalyTool(object):
             count += 1
             if count % 100000 == 0:
                 print(count)
-            item = json.loads(line)
             # print(line)
             item = json.loads(line)
             sql = "INSERT INTO TITLE (ITEM_ID, TITLE_FEATURES) VALUES ('%s', '%s')" % (
@@ -42,7 +42,7 @@ class TitleAnalyTool(object):
                 print(count)
         title_file.close()
 
-    def get_all(self):
+    def get_all_from_db(self):
         start = time.time()
         self.result_dict = dict()
         sql = "SELECT * FROM TITLE"
@@ -52,20 +52,19 @@ class TitleAnalyTool(object):
             self.result_dict[int(row[0])] = [int(i) for i in json.loads(row[1])]
         print("title consume", time.time() - start)
 
+    def get_all_from_origin_file(self, file_path):
+        title_file = open(file_path, 'r')
+        self.result_dict = dict()
+        for line in title_file.readlines():
+            item = json.loads(line)
+            self.result_dict[item["item_id"]] = list(item["title_features"].keys())
+        title_file.close()
+
     def get(self, item_id):
         if self.result_dict is None:
-            self.get_all()
+            print("Please load data")
+            exit()
         return self.result_dict.get(item_id, list())
-
-    # def get(self, item_id):
-    #     start = time.time()
-    #     sql = "SELECT * FROM TITLE WHERE ITEM_ID=%s" % item_id
-    #     result = list()
-    #     cursor = self.cursor.execute(sql)
-    #     for row in cursor:
-    #         result = [int(i) for i in json.loads(row[1])]
-    #     # print("consume: %s" % (time.time() - start))
-    #     return result
 
     def get_title_feature_size(self):
         start = time.time()

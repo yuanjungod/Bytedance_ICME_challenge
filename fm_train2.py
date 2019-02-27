@@ -9,25 +9,22 @@ from model_zoo.focal_loss import FocalLoss
 import random
 import logging
 from utils.utils import rand_train_data
+from data_io.data_preprocessor import DataPreprocessor
 
 # 通过下面的方式进行简单配置输出方式与日志级别
 
+video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
+title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
+user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 # video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
 # title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 task = "finish"
-<<<<<<< HEAD
-deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, task,
-                 embedding_size=32, learning_rate=0.01)
-
-logging.basicConfig(filename='%s_logger.log' % task, level=logging.INFO)
-=======
-deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128,
+deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, 128,
                  embedding_size=64, learning_rate=0.003)
 exit()
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S', filename='%s_logger.log' % task, level=logging.INFO)
->>>>>>> fbc578a3dc76a3ea774900225c881b3eaa5268c5
 
 """
     train model
@@ -50,6 +47,11 @@ criterion = FocalLoss(2)
 # F.binary_cross_entropy()
 # F.cross_entropy()
 # torch.nn.BCEloss
+video_path = "/Volumes/Seagate Expansion Drive/byte/track2/track2_video_features.txt"
+title_path = "/Volumes/Seagate Expansion Drive/byte/track2/track2_title.txt"
+interactive_file = "/Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.txt"
+data_prepro_tool = DataPreprocessor()
+result, val_result = data_prepro_tool.get_train_data_from_origin_file(video_path, title_path, interactive_file)
 
 count = 0
 load_data_time = time.time()
@@ -68,26 +70,16 @@ for epoch in range(total_epochs):
 
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
     logging.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
-    for result in os.listdir(train_dir):
-        fp = open(os.path.join(train_dir, result), "r")
-        result = json.load(fp)
-        fp.close()
 
-        result = rand_train_data(result)
-
-        val_fp = open(random.choice(test_file_list), "r")
-        val_result = json.load(val_fp)
-        val_fp.close()
-
-        # print("%s data load finished" % count, time.time() - load_data_time)
-        # print(result["index"][0])
-        deep_fm.fit2(model, optimizer, criterion, result["index"], result["value"], result["video"], result["title"],
-                     result["title_value"], result["like"], result["finish"], count,
-                     save_path="/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/%s" % task,
-                     Xi_valid=val_result["index"], Xv_valid=val_result["value"],
-                     y_like_valid=val_result["like"], y_finish_valid=val_result["finish"],
-                     video_feature_val=val_result["video"], title_feature_val=val_result["title"],
-                     title_value_val=val_result["title_value"], total_epochs=total_epochs)
-        count += 1
-        load_data_time = time.time()
+    # print("%s data load finished" % count, time.time() - load_data_time)
+    # print(result["index"][0])
+    deep_fm.fit2(model, optimizer, criterion, result["index"], result["value"], result["video"], result["audio"],
+                 result["title"], result["title_value"], result["like"], result["finish"], count,
+                 save_path="/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/%s" % task,
+                 Xi_valid=val_result["index"], Xv_valid=val_result["value"],
+                 y_like_valid=val_result["like"], y_finish_valid=val_result["finish"],
+                 video_feature_val=val_result["video"], title_feature_val=val_result["title"],
+                 title_value_val=val_result["title_value"], total_epochs=total_epochs)
+    count += 1
+    load_data_time = time.time()
 
