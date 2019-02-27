@@ -33,17 +33,16 @@ class VideoFeature(object):
 
     def get_all_from_origin_file(self, video_feature_path):
         video_file = open(video_feature_path, 'r')
-        # line = video_file.readline()
+        line = video_file.readline()
         count = 0
-        # while line:
-        for line in video_file.readlines():
+        while line:
             count += 1
             if count % 1000000 == 0:
                 print("video", count, len(self.video_dict))
             # print(line)
             item = json.loads(line)
             self.video_dict[item["item_id"]] = json.dumps(item["video_feature_dim_128"])
-            # line = video_file.readline()
+            line = video_file.readline()
         video_file.close()
         return self.video_dict
 

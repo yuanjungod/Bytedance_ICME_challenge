@@ -133,7 +133,8 @@ class UserInteractiveTool(object):
 
     def get_all_from_origin_file(self, user_interactivate_path):
         track_file = open(user_interactivate_path)
-        for line in track_file.readlines():
+        line = track_file.readline()
+        while line:
             column_list = line.split("\t")
             current_result = list()
             finish = column_list[6]
@@ -143,6 +144,7 @@ class UserInteractiveTool(object):
                 if i not in [2, 6, 7]:
                     current_result.append(column_list[i]+1)
             self.user_interactivate_list.append([current_result, item_id, like, finish])
+            line = track_file.readline()
         track_file.close()
         return self.user_interactivate_list
 

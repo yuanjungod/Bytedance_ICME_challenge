@@ -55,10 +55,13 @@ class TitleAnalyTool(object):
     def get_all_from_origin_file(self, file_path):
         title_file = open(file_path, 'r')
         self.result_dict = dict()
-        for line in title_file.readlines():
+        line = title_file.readline()
+        while line:
             item = json.loads(line)
             self.result_dict[item["item_id"]] = list(item["title_features"].keys())
+            line = title_file.readline()
         title_file.close()
+        return self.result_dict
 
     def get(self, item_id):
         if self.result_dict is None:
