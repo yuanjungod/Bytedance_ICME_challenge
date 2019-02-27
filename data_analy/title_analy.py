@@ -57,16 +57,6 @@ class TitleAnalyTool(object):
             self.get_all()
         return self.result_dict.get(item_id, list())
 
-    # def get(self, item_id):
-    #     start = time.time()
-    #     sql = "SELECT * FROM TITLE WHERE ITEM_ID=%s" % item_id
-    #     result = list()
-    #     cursor = self.cursor.execute(sql)
-    #     for row in cursor:
-    #         result = [int(i) for i in json.loads(row[1])]
-    #     # print("consume: %s" % (time.time() - start))
-    #     return result
-
     def get_title_feature_size(self):
         start = time.time()
         sql = "SELECT * FROM TITLE"

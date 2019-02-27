@@ -1,7 +1,7 @@
 from data_io.data_preprocessor import DataPreprocessor
 from model_zoo.deep_fm import DeepFM
 import torch
-import torch.nn.functional as F
+import torch.nn as nn
 import time
 import os
 import json
@@ -19,10 +19,11 @@ user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 # title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 task = "finish"
-deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, task,
+deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128,
                  embedding_size=64, learning_rate=0.003)
-
-logging.basicConfig(filename='%s_logger.log' % task, level=logging.INFO)
+exit()
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
+                    datefmt='%m/%d/%Y %H:%M:%S', filename='%s_logger.log' % task, level=logging.INFO)
 
 """
     train model
@@ -38,8 +39,13 @@ test_file_list = [os.path.join(test_dir, i) for i in os.listdir(test_dir)]
 train_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons"
 # train_dir = "/Volumes/Seagate Expansion Drive/byte/track2/jsons"
 
-# criterion = FocalLoss(2, gamma=0)
-criterion = F.binary_cross_entropy_with_logits
+criterion = FocalLoss(2)
+# criterion = nn.BCELoss()
+# criterion = F.binary_cross_entropy_with_logits
+# F.cross_entropy()
+# F.binary_cross_entropy()
+# F.cross_entropy()
+# torch.nn.BCEloss
 
 count = 0
 load_data_time = time.time()

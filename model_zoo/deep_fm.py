@@ -26,7 +26,9 @@ import torch.optim as optim
 from torch.autograd import Variable
 from utils.utils import warmup_linear
 import torch.backends.cudnn
+from .interest_pooling import InterestPooling1
 import logging
+import json
 
 """
     网络结构部分
@@ -68,16 +70,19 @@ class DeepFM(torch.nn.Module):
     Attention: only support logsitcs regression
     """
 
-    def __init__(self, field_size, tile_word_size, feature_sizes, video_feature_size, target, embedding_size=32, is_shallow_dropout=True, dropout_shallow=[0.5, 0.5],
+    def __init__(self, field_size, tile_word_size, feature_sizes, video_feature_size, embedding_size=32, is_shallow_dropout=True, dropout_shallow=[0.5, 0.5],
                  h_depth=2, deep_layers=[32, 32], is_deep_dropout=True, dropout_deep=[0.5, 0.5, 0.5],
                  deep_layers_activation='relu', n_epochs=64, batch_size=256, learning_rate=0.003,
                  optimizer_type='adam', is_batch_norm=False, verbose=False, random_seed=950104, weight_decay=0.0,
                  use_fm=True, use_ffm=False, use_deep=True, loss_type='logloss', eval_metric=roc_auc_score,
-                 use_cuda=True, n_class=1, greater_is_better=True
+                 use_cuda=True, n_class=2, greater_is_better=True, cin_deep_layers=[], cin_layer_sizes=[30, 30, 30],
+                 cin_activation='identity',
+                 is_cin_bn=False,
+                 cin_direct=False, use_cin_bias=False,
+                 cin_deep_dropouts=[], use_cin=True,
                  ):
         super(DeepFM, self).__init__()
         self.total_count = 0
-        self.target = target
         self.field_size = field_size
         self.feature_sizes = feature_sizes
         self.tile_word_size = tile_word_size
@@ -107,6 +112,16 @@ class DeepFM(torch.nn.Module):
         self.n_class = n_class
         self.greater_is_better = greater_is_better
 
+        self.cin_activation = cin_activation
+        self.is_cin_bn = is_cin_bn
+        self.cin_layer_sizes = [self.field_size] + cin_layer_sizes
+        self.cin_direct = cin_direct
+        self.use_cin_bias = use_cin_bias
+
+        self.use_cin = use_cin
+        self.cin_deep_layers = cin_deep_layers
+        self.cin_deep_dropouts = cin_deep_dropouts
+
         torch.manual_seed(self.random_seed)
 
         """
@@ -135,6 +150,11 @@ class DeepFM(torch.nn.Module):
         else:
             print("You have to choose more than one of (fm, ffm, deep) models to use")
             exit(1)
+
+        """
+          InterestPooling1
+        """
+        self.interest_pooling = InterestPooling1(30, embedding_size, use_cuda=self.use_cuda)
 
         """
             bias
@@ -199,6 +219,54 @@ class DeepFM(torch.nn.Module):
                     setattr(self, 'linear_' + str(i + 1) + '_dropout', nn.Dropout(self.dropout_deep[i + 1]))
 
             print("Init deep part succeed")
+        """
+                    cin part
+                """
+        if self.use_cin:
+            logging.info("Init cin part")
+            # conv1d init
+            in_channels = self.field_size
+            for i, layer_size in enumerate(self.cin_layer_sizes[:-1]):
+                in_channels = self.cin_layer_sizes[0] * layer_size
+                if self.cin_direct or i == len(self.cin_layer_sizes[1:]) - 1:
+                    out_channels = self.cin_layer_sizes[i + 1]
+                else:
+                    out_channels = 2 * self.cin_layer_sizes[i + 1]
+                setattr(self, 'conv1d_' + str(i + 1),
+                        nn.Conv1d(in_channels, out_channels, kernel_size=1, bias=self.use_cin_bias))
+                if self.is_cin_bn:
+                    setattr(self, 'conv1d_bn_' + str(i + 1), nn.BatchNorm1d(out_channels))
+            if len(self.cin_deep_layers) != 0:
+                if len(self.cin_deep_dropouts) != 0:
+                    assert len(self.cin_deep_layers) == len(
+                        self.cin_deep_dropouts), 'make sure:len(cin_deep_layers) == len(cin_deep_dropouts)'
+                for i, h in enumerate(self.cin_deep_layers):
+                    if i == 0:
+                        setattr(self, 'cin_linear_' + str(i + 1),
+                                nn.Linear(sum(self.cin_layer_sizes[1:]), self.cin_deep_layers[i]))
+                    else:
+                        setattr(self, 'cin_linear_' + str(i + 1),
+                                nn.Linear(self.cin_deep_layers[i - 1], self.cin_deep_layers[i]))
+                    if self.is_cin_bn:
+                        setattr(self, 'cin_deep_bn_' + str(i + 1), nn.BatchNorm1d(self.cin_deep_layers[i]))
+                    if len(self.cin_deep_dropouts) != 0:
+                        setattr(self, 'cin_linear_' + str(i + 1) + '_dropout', nn.Dropout(self.cin_deep_dropouts[i]))
+            logging.info("Init cin part succeed")
+
+        """
+            linear_layer
+        """
+        concat_input_size = self.field_size
+        if self.use_fm:
+            concat_input_size = concat_input_size + self.embedding_size
+        if self.use_deep:
+            concat_input_size = concat_input_size + self.deep_layers[-1]
+        if self.use_cin:
+            if len(self.cin_deep_layers) != 0:
+                concat_input_size = concat_input_size + self.cin_deep_layers[-1]
+            else:
+                concat_input_size = concat_input_size + sum(self.cin_layer_sizes[1:])
+        self.concat_linear_layer = nn.Linear(concat_input_size, self.n_class)
 
         print("Init succeed")
 
@@ -307,11 +375,14 @@ class DeepFM(torch.nn.Module):
                 deep_emb = torch.cat([deep_emb, video_feature], 1)
 
             title_embedding = self.title_embedding(title_feature)
-            title_embedding = title_embedding*title_value
-            title_embedding = title_embedding.permute(0, 2, 1)
-            title_embedding = torch.sum(title_embedding, -1)
-
-            title_embedding = activation(title_embedding)
+            # title_embedding = title_embedding*title_value
+            # title_embedding = title_embedding.permute(0, 2, 1)
+            # title_embedding = torch.sum(title_embedding, -1)
+            #
+            # title_embedding = activation(title_embedding)
+            title_size = title_embedding.size()
+            title_embedding = title_embedding.view(-1, title_size[1]*title_size[2])
+            title_embedding = self.interest_pooling(title_embedding, title_value)
 
             deep_emb = torch.cat([deep_emb, title_embedding], 1)
 
@@ -330,19 +401,78 @@ class DeepFM(torch.nn.Module):
                 x_deep = activation(x_deep)
                 if self.is_deep_dropout:
                     x_deep = getattr(self, 'linear_' + str(i + 1) + '_dropout')(x_deep)
-        """
-            sum
-        """
-        if self.use_fm and self.use_deep:
-            total_sum = torch.sum(fm_first_order, 1) + torch.sum(fm_second_order, 1) + torch.sum(x_deep, 1) + self.bias
-        elif self.use_ffm and self.use_deep:
-            total_sum = torch.sum(ffm_first_order, 1) + torch.sum(ffm_second_order, 1) + torch.sum(x_deep, 1) + self.bias
-        elif self.use_fm:
-            total_sum = torch.sum(fm_first_order, 1) + torch.sum(fm_second_order, 1) + self.bias
-        elif self.use_ffm:
-            total_sum = torch.sum(ffm_first_order, 1) + torch.sum(ffm_second_order, 1) + self.bias
-        else:
-            total_sum = torch.sum(x_deep, 1)
+
+        if self.use_cin:
+            # cin_embs = fm_embs #[N,H0,K]
+
+            hidden_layers = []
+            final_result = []
+            final_len = 0
+
+            X0 = torch.transpose(fm_second_order_emb_arr, 1, 2)  # [N,K,H0]
+            hidden_layers.append(X0)
+            X0 = X0.unsqueeze(-1)  # [N,K,H0,1]
+
+            for idx, layer_size in enumerate(self.cin_layer_sizes[:-1]):
+                Xk_1 = hidden_layers[-1].unsqueeze(2)  # [N,K,1,H_(k-1)]
+                # outer product
+                out_product = torch.matmul(X0, Xk_1)  # [N,K,H0,H_(k-1)]
+                out_product = out_product.view(-1, self.embedding_size, layer_size * self.cin_layer_sizes[0])
+                out_product = out_product.transpose(1, 2)  # [N,H0XH_(k-1),K]
+                # conv
+                conv = getattr(self, 'conv1d_' + str(idx + 1))
+                zk = conv(out_product)  # [N,Hk*2,K] or [N,Hk,K]
+                if self.is_cin_bn:
+                    zk = getattr(self, 'conv1d_bn_' + str(idx + 1))(zk)
+                if self.cin_activation == 'identity':
+                    zk = zk
+                else:
+                    zk = F.relu(zk)
+                # zk = zk.transpose(1,2)#[N,K,Hk*2] or [N,K,Hk]
+                if self.cin_direct:
+                    direct_connect = zk  # [N,Hk,K]
+                    next_hidden = zk.transpose(1, 2)  # [N,K,Hk]
+                else:
+                    if idx != len(self.cin_layer_sizes[1:]) - 1:
+                        direct_connect, next_hidden = zk.split(self.cin_layer_sizes[idx + 1], 1)
+                        next_hidden = next_hidden.transpose(1, 2)  # [N,K,Hk]
+                    else:
+                        direct_connect = zk
+                        next_hidden = 0
+                final_len = final_len + self.cin_layer_sizes[idx + 1]
+                final_result.append(direct_connect)
+                hidden_layers.append(next_hidden)
+            # concat
+            cin_result = torch.cat(final_result, 1)  # [N,H1+...+Hk,K]
+            cin_result = torch.sum(cin_result, -1)  # [N,H1+...+Hk]
+            # lr
+            if len(self.cin_deep_layers) != 0:
+                if self.cin_activation == 'identity':
+                    activation = F.relu
+                else:
+                    activation = F.relu
+                for i in range(len(self.cin_deep_layers)):
+                    cin_result = getattr(self, 'cin_linear_' + str(i + 1))(cin_result)
+                    if self.is_cin_bn:
+                        cin_result = getattr(self, 'cin_deep_bn_' + str(i + 1))(cin_result)
+                    cin_result = activation(cin_result)
+                    if len(self.cin_deep_dropouts) != 0:
+                        cin_result = getattr(self, 'cin_linear_' + str(i + 1) + '_dropout')(cin_result)
+
+        concat_input = fm_first_order
+        if self.use_deep:
+            concat_input = torch.cat([concat_input, x_deep])
+        if self.use_fm:
+            if concat_input is not None:
+                concat_input = torch.cat([concat_input, fm_second_order], 1)
+            else:
+                concat_input = fm_second_order
+        if self.use_cin:
+            if concat_input is not None:
+                concat_input = torch.cat([concat_input, cin_result], 1)
+            else:
+                concat_input = cin_result
+        total_sum = self.concat_linear_layer(concat_input)
         return total_sum
 
     def fit2(self, model, optimizer, criterion, Xi_train, Xv_train, video_feature, title_feature, title_value,
@@ -362,36 +492,24 @@ class DeepFM(torch.nn.Module):
         Xi_train = np.array(Xi_train).reshape((-1, self.field_size, 1))
         # video_feature = np.array(video_feature)
         title_feature = np.array(title_feature)
-        title_value = [[[j for _ in range(self.embedding_size)] for j in i] for i in title_value]
+        # title_value = [[[j for _ in range(self.embedding_size)] for j in i] for i in title_value]
         title_value = np.array(title_value)
         Xv_train = np.array(Xv_train)
         y_like_train = np.array(y_like_train)
         y_finish_train = np.array(y_finish_train)
-        if self.target == "finish":
-            y_train = y_finish_train
-        elif self.target == "like":
-            y_train = y_like_train
-        else:
-            print("target wrong")
-            return
+        y_train = np.concatenate([y_like_train.reshape(-1, 1), y_finish_train.reshape(-1, 1)], 1)
         x_size = Xi_train.shape[0]
         if Xi_valid:
             Xi_valid = np.array(Xi_valid).reshape((-1, self.field_size, 1))
             Xv_valid = np.array(Xv_valid)
 
             title_feature_val = np.array(title_feature_val)
-            title_value_val = [[[j for _ in range(self.embedding_size)] for j in i] for i in title_value_val]
+            # title_value_val = [[[j for _ in range(self.embedding_size)] for j in i] for i in title_value_val]
             title_value_val = np.array(title_value_val)
 
             y_like_valid = np.array(y_like_valid)
             y_finish_valid = np.array(y_finish_valid)
-            if self.target == "finish":
-                y_valid = y_finish_valid
-            elif self.target == "like":
-                y_valid = y_like_valid
-            else:
-                print("target wrong")
-                return
+            y_valid = np.concatenate([y_like_valid.reshape(-1, 1), y_finish_valid.reshape(-1, 1)], 1)
             x_valid_size = Xi_valid.shape[0]
             is_valid = True
         if self.verbose:
@@ -409,8 +527,8 @@ class DeepFM(torch.nn.Module):
                 break
             batch_xi = Variable(torch.LongTensor(Xi_train[offset:end]))
             batch_xv = Variable(torch.FloatTensor(Xv_train[offset:end]))
-            batch_like_y = Variable(torch.FloatTensor(y_like_train[offset:end]))
-            batch_finish_y = Variable(torch.FloatTensor(y_finish_train[offset:end]))
+            batch_label = Variable(torch.cat([torch.FloatTensor(y_like_train[offset:end]).view(-1, 1),
+                                              torch.FloatTensor(y_finish_train[offset:end]).view(-1, 1)], -1))
 
             try:
                 batch_video_feature = Variable(torch.FloatTensor(video_feature[offset:end]))
@@ -421,20 +539,14 @@ class DeepFM(torch.nn.Module):
             batch_title_feature = Variable(torch.LongTensor(title_feature[offset:end]))
 
             if self.use_cuda:
-                batch_xi, batch_xv, batch_like_y, batch_finish_y, batch_video_feature, batch_title_value, batch_title_feature = \
-                    batch_xi.cuda(), batch_xv.cuda(), batch_like_y.cuda(), batch_finish_y.cuda(), batch_video_feature.cuda(), \
+                batch_xi, batch_xv, batch_label, batch_video_feature, batch_title_value, batch_title_feature = \
+                    batch_xi.cuda(), batch_xv.cuda(), batch_label.cuda(), batch_video_feature.cuda(), \
                     batch_title_value.cuda(), batch_title_feature.cuda()
             optimizer.zero_grad()
 
             outputs = model(batch_xi, batch_xv, batch_video_feature, batch_title_feature, batch_title_value)
-            if self.target == "finish":
-                batch_y = batch_finish_y
-            elif self.target == "like":
-                batch_y = batch_like_y
-            else:
-                print("target wrong")
-                return
-            loss = criterion(outputs, batch_y)
+
+            loss = criterion(outputs, batch_label)
             loss.backward()
 
             for param_group in optimizer.param_groups:
@@ -446,9 +558,9 @@ class DeepFM(torch.nn.Module):
             total_loss += loss.data
             if self.verbose:
                 if i % 100 == 99:  # print every 100 mini-batches
-                    eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_title_feature, batch_title_value, batch_y)
-                    print('[%d, %5d] loss: %.6f metric: %.6f time: %.1f s' %
-                          (count + 1, i + 1, total_loss / 100.0, eval, time() - batch_begin_time))
+                    eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_title_feature, batch_title_value, batch_label)
+                    print('[%d, %5d] loss: %.6f metric: like-%.6f, finish-%.6f time: %.1f s' %
+                          (count + 1, i + 1, total_loss / 100.0, eval[0], eval[1], time() - batch_begin_time))
                     total_loss = 0.0
                     batch_begin_time = time()
             if self.total_count % 100 == 0:
@@ -458,10 +570,11 @@ class DeepFM(torch.nn.Module):
 
         train_loss, train_eval = self.eval_by_batch(Xi_train, Xv_train, y_train, x_size, video_feature, title_feature, title_value)
         print('*' * 50)
-        print('train [%d] loss: %.6f metric: %.6f time: %.1f s' %
-              (count + 1, train_loss, train_eval, time() - epoch_begin_time))
-        logging.info('train [%d] loss: %.6f metric: %.6f time: %.1f s' % (
-            count + 1, train_loss, train_eval, time() - epoch_begin_time))
+        print('train [%d] loss: %.6f metric: like-%.6f,finish-%.6f time: %.1f s' %
+              (count + 1, train_loss, train_eval[0], train_eval[1], time() - epoch_begin_time))
+        log_json = {"count": count + 1, "loss": train_loss, "like_auc": train_eval[0],
+                    "finish_auc": train_eval[1], "time": time() - epoch_begin_time}
+        logging.info(json.dumps(log_json))
         print('*' * 50)
 
         if is_valid:
@@ -469,10 +582,12 @@ class DeepFM(torch.nn.Module):
                                                         video_feature_val, title_feature_val, title_value_val)
             # valid_result.append(valid_eval)
             print('valid*' * 20)
-            print('val [%d] loss: %.6f metric: %.6f time: %.1f s' %
-                  (count + 1, valid_loss, valid_eval, time() - epoch_begin_time))
-            logging.info('val [%d] loss: %.6f metric: %.6f time: %.1f s' % (
-                count + 1, valid_loss, valid_eval, time() - epoch_begin_time))
+            print('val [%d] loss: %.6f metric: like-%.6f,finish-%.6f time: %.1f s' %
+                  (count + 1, valid_loss, valid_eval[0], valid_eval[1], time() - epoch_begin_time))
+            log_json = {"count": count + 1, "loss": valid_loss, "like_auc": valid_eval[0],
+                        "finish_auc": valid_eval[1], "time": time() - epoch_begin_time}
+            logging.info(json.dumps(log_json))
+
             print('valid*' * 20)
 
     def eval_by_batch(self, Xi, Xv, y, x_size, video_feature, title_feature, title_value):
@@ -507,7 +622,7 @@ class DeepFM(torch.nn.Module):
             loss = criterion(outputs, batch_y)
             total_loss += loss.data * (end - offset)
         # print("y_pred", y_pred)
-        total_metric = self.eval_metric(y, y_pred)
+        total_metric = [self.eval_metric(y[:, 0], y_pred[:, 0]), self.eval_metric(y[:, 1], y_pred[:, 1])]
         return total_loss / x_size, total_metric
 
     # shuffle three lists simutaneously
@@ -597,4 +712,4 @@ class DeepFM(torch.nn.Module):
         :return: metric of the evaluation
         """
         y_pred = self.inner_predict_proba(Xi, Xv, video_feature, title_feature, title_value)
-        return self.eval_metric(y.cpu().data.numpy(), y_pred)
+        return self.eval_metric(y.cpu().data.numpy()[:, 0], y_pred[:, 0]), self.eval_metric(y.cpu().data.numpy()[:, 1], y_pred[:, 1])
