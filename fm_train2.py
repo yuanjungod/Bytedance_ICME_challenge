@@ -22,7 +22,7 @@ user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 task = "finish"
 deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, 128,
                  embedding_size=64, learning_rate=0.003)
-exit()
+# exit()
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S', filename='%s_logger.log' % task, level=logging.INFO)
 
