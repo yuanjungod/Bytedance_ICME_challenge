@@ -48,7 +48,7 @@ criterion = FocalLoss(2)
 # F.cross_entropy()
 # torch.nn.BCEloss
 video_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_video_features.txt"
-title_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2_title.txt"
+title_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_title.txt"
 interactive_file = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.txt"
 audio_file_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_audio_features.txt"
 data_prepro_tool = DataPreprocessor()
