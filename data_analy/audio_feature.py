@@ -13,7 +13,7 @@ class AudioFeatureTool(object):
         while line:
             count += 1
             if count % 1000000 == 0:
-                print("audio", count)
+                print("audio", count, len(self.audio_dict))
             # print(line)
             item = json.loads(line)
             self.audio_dict[item["item_id"]] = item["audio_feature_128_dim"]
