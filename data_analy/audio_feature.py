@@ -11,6 +11,7 @@ class AudioFeatureTool(object):
         for line in video_file.readlines():
             item = json.loads(line)
             self.audio_dict[item["item_id"]] = item["video_feature_dim_128"]
+        video_file.close()
         return self.audio_dict
 
     def get(self, item_id):
