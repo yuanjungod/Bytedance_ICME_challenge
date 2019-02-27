@@ -52,7 +52,8 @@ title_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2_title.txt"
 interactive_file = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.txt"
 audio_file_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_audio_features.txt"
 data_prepro_tool = DataPreprocessor()
-result, val_result = data_prepro_tool.get_train_data_from_origin_file(video_path, title_path, interactive_file, audio_file_path)
+result, val_result = data_prepro_tool.get_train_data_from_origin_file(
+    video_path, title_path, interactive_file, audio_file_path)
 
 count = 0
 load_data_time = time.time()

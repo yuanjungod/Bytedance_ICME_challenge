@@ -4,7 +4,7 @@ import json
 class AudioFeatureTool(object):
 
     def __init__(self):
-        self.audio_dict = None
+        self.audio_dict = dict()
 
     def get_all_from_origin_file(self, audio_file_path):
         audio_file = open(audio_file_path, 'r')
