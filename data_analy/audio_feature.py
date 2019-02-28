@@ -104,6 +104,16 @@ class AudioFeatureTool(object):
             json.dump(video_dict, f)
         file_count += 1
 
+    def get_all_from_json_file(self, video_json_file_list):
+        for video_json_file in video_json_file_list:
+            with open(video_json_file) as f:
+                print(f)
+                video_dict = json.load(f)
+                for key, value in video_dict.items():
+                    self.result_dict[key] = value
+        # f.close()
+        return self.result_dict
+
 
 if __name__ == "__main__":
     audio_tool = AudioFeatureTool("/Volumes/Seagate Expansion Drive/byte/track2/audio.db")
