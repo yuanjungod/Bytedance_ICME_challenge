@@ -638,8 +638,9 @@ class DeepFM(torch.nn.Module):
             loss = criterion(outputs, batch_y)
             total_loss += loss.data * (end - offset)
         y_pred = np.array(y_pred)
-        size = y_pred.shape
-        y_pred = y_pred.reshape(size[1], 2)
+        # size = y_pred.shape
+        print("y_pred", y_pred)
+        y_pred = y_pred.reshape(-1, 2)
         total_metric = [self.eval_metric(y[:, 0], y_pred[:, 0]), self.eval_metric(y[:, 1], y_pred[:, 1])]
         return total_loss / x_size, total_metric
 
