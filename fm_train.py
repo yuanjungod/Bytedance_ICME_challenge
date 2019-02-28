@@ -22,7 +22,7 @@ deep_fm = DeepFM(10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20]
                  embedding_size=64, learning_rate=0.003)
 # exit()
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
-                    datefmt='%m/%d/%Y %H:%M:%S', filename='%s_logger.log' % task, level=logging.INFO)
+                    datefmt='%m/%d/%Y %H:%M:%S', filename='logger.log', level=logging.INFO)
 
 """
     train model
