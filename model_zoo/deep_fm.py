@@ -564,8 +564,8 @@ class DeepFM(torch.nn.Module):
                            time() - batch_begin_time))
                     total_loss = 0.0
                     batch_begin_time = time()
-            if self.total_count % 100 == 0:
-                print("total count", self.total_count)
+            # if self.total_count % 100 == 0:
+            #     print("total count", self.total_count)
             if save_path and self.total_count % 5000 == 0:
                 torch.save(self.state_dict(), os.path.join(save_path, "byte_%s.model" % self.total_count))
 
@@ -611,7 +611,7 @@ class DeepFM(torch.nn.Module):
         if self.use_ffm:
             batch_size = 16384 * 2
         else:
-            batch_size = 16384
+            batch_size = 256
         batch_iter = x_size // batch_size
         criterion = F.binary_cross_entropy_with_logits
         model = self.eval()
