@@ -61,14 +61,14 @@ elif model.optimizer_type == 'adag':
 
 total_epochs = 3
 
-# video_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_video_features.txt"
-# title_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_title.txt"
-# interactive_file = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.txt"
-# audio_file_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_audio_features.txt"
-video_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
-title_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
-interactive_file = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
-audio_file_path = "/Volumes/Seagate Expansion Drive/byte/track2/audio.db"
+video_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/video.db"
+title_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/title.db"
+interactive_file = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/user.db"
+audio_file_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/audio.db"
+# video_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
+# title_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
+# interactive_file = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
+# audio_file_path = "/Volumes/Seagate Expansion Drive/byte/track2/audio.db"
 data_prepro_tool = DataPreprocessor(video_path, interactive_file, title_path, audio_file_path)
 result_list = data_prepro_tool.get_train_data()
 for epoch in range(total_epochs):
