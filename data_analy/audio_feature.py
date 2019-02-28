@@ -105,6 +105,7 @@ class AudioFeatureTool(object):
         file_count += 1
 
     def get_all_from_json_file(self, video_json_file_list):
+        self.result_dict = dict()
         for video_json_file in video_json_file_list:
             with open(video_json_file) as f:
                 print(f)
