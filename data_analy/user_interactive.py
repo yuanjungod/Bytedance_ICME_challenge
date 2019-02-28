@@ -206,7 +206,7 @@ class UserInteractiveTool(object):
 
 if __name__ == "__main__":
     import time
-    db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
+    db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/user.db"
     interactive_tool = UserInteractiveTool(db_path)
     # interactive_tool.create_table()
     # interactive_tool.create_table()
