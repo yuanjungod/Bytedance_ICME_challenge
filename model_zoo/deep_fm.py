@@ -299,14 +299,14 @@ class DeepFM(torch.nn.Module):
             # print("test", Xi[:, 0, :])
             # exit()
 
-            # fm_first_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
-            #                           enumerate(self.fm_first_order_embeddings)]
-            fm_first_order_emb_arr = list()
-            for i, emb in enumerate(self.fm_first_order_embeddings):
-                print(Xi[:, i, :], emb)
-                print(Xi[:, i, :].size(), emb, torch.sum(emb(Xi[:, i, :]), 1).t(), Xv[:, i])
-                fm_first_order_emb_arr.append((torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t())
-            print([i.size() for i in fm_first_order_emb_arr])
+            fm_first_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
+                                      enumerate(self.fm_first_order_embeddings)]
+            # fm_first_order_emb_arr = list()
+            # for i, emb in enumerate(self.fm_first_order_embeddings):
+            #     print(Xi[:, i, :], emb)
+            #     print(Xi[:, i, :].size(), emb, torch.sum(emb(Xi[:, i, :]), 1).t(), Xv[:, i])
+            #     fm_first_order_emb_arr.append((torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t())
+            # print([i.size() for i in fm_first_order_emb_arr])
             fm_first_order = torch.cat(fm_first_order_emb_arr, 1)
             if self.is_shallow_dropout:
                 fm_first_order = self.fm_first_order_dropout(fm_first_order)
