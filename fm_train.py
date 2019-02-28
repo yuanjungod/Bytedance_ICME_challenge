@@ -73,7 +73,7 @@ for epoch in range(total_epochs):
     for item in iter_data:
         print("loading consume: %s" % (time.time() - load_data_time))
         train_result, val_result = item
-        print("train_result len:", len(train_result))
+        print("train_result len:", len(train_result["index"]))
         deep_fm.fit2(model, optimizer, criterion, train_result["index"], train_result["value"], train_result["video"],
                      train_result['audio'], train_result["title"], train_result["title_value"], train_result["like"],
                      train_result["finish"], count,
