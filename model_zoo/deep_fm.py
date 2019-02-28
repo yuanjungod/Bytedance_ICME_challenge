@@ -306,7 +306,7 @@ class DeepFM(torch.nn.Module):
             #     print(Xi[:, i, :], emb)
             #     # print(Xi[:, i, :], emb, torch.sum(emb(Xi[:, i, :]), 1).t(), Xv[:, i])
             #     fm_first_order_emb_arr.append((torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t())
-
+            print([i.size() for i in fm_first_order_emb_arr])
             fm_first_order = torch.cat(fm_first_order_emb_arr, 1)
             if self.is_shallow_dropout:
                 fm_first_order = self.fm_first_order_dropout(fm_first_order)
