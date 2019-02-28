@@ -558,7 +558,7 @@ class DeepFM(torch.nn.Module):
             total_loss += loss.data
             if self.verbose:
                 if i % 100 == 99:  # print every 100 mini-batches
-                    eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_title_feature, batch_title_value, batch_label)
+                    eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_audio_feature, batch_title_feature, batch_title_value, batch_label)
                     print('[%d, %5d] loss: %.6f metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
                           (count + 1, i + 1, total_loss / 100.0, eval[0], eval[1], current_learn_rate,
                            time() - batch_begin_time))
@@ -712,22 +712,22 @@ class DeepFM(torch.nn.Module):
         pred = torch.sigmoid(model(Xi, Xv)).cpu()
         return (pred.data.numpy() > 0.5)
 
-    def inner_predict_proba(self, Xi, Xv, video_feature, title_feature, title_value):
+    def inner_predict_proba(self, Xi, Xv, video_feature, audio_feature, title_feature, title_value):
         """
         :param Xi: tensor of feature index
         :param Xv: tensor of feature value
         :return: output, numpy
         """
         model = self.eval()
-        pred = torch.sigmoid(model(Xi, Xv, video_feature, title_feature, title_value)).cpu()
+        pred = torch.sigmoid(model(Xi, Xv, video_feature, audio_feature, title_feature, title_value)).cpu()
         return pred.data.numpy()
 
-    def evaluate(self, Xi, Xv, video_feature, title_feature, title_value, y):
+    def evaluate(self, Xi, Xv, video_feature, audio_feature, title_feature, title_value, y):
         """
         :param Xi: tensor of feature index
         :param Xv: tensor of feature value
         :param y: tensor of labels
         :return: metric of the evaluation
         """
-        y_pred = self.inner_predict_proba(Xi, Xv, video_feature, title_feature, title_value)
+        y_pred = self.inner_predict_proba(Xi, Xv, video_feature, audio_feature, title_feature, title_value)
         return self.eval_metric(y.cpu().data.numpy()[:, 0], y_pred[:, 0]), self.eval_metric(y.cpu().data.numpy()[:, 1], y_pred[:, 1])
