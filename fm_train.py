@@ -73,7 +73,7 @@ for epoch in range(total_epochs):
         deep_fm.fit2(model, optimizer, criterion, train_result["index"], train_result["value"], train_result["video"],
                      train_result['audio'], train_result["title"], train_result["title_value"], train_result["like"],
                      train_result["finish"], count,
-                     save_path="/Volumes/Seagate Expansion Drive/byte/track2/models/",
+                     save_path="/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/",
                      Xi_valid=val_result["index"], Xv_valid=val_result["value"], audio_feature_val=val_result["audio"],
                      y_like_valid=val_result["like"], y_finish_valid=val_result["finish"],
                      video_feature_val=val_result["video"], title_feature_val=val_result["title"],
