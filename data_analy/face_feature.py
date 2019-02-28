@@ -9,7 +9,7 @@ class FaceFeature(object):
         line = face_feature_file.readline()
         while line:
             face = json.loads(line)
-            self.face_feature_dict[face["item_id"]] = face["face_attrs"]
+            self.face_feature_dict[face["item_id"]] = json.dumps(face["face_attrs"])
             line = face_feature_file.readline()
         face_feature_file.close()
 

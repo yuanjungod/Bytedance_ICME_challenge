@@ -14,11 +14,11 @@ class DataPreprocessor(object):
     FEATURE_SIZES = [80000, 400, 900000, 500, 5, 90000, 80000, 30, 20]
     MAX_TITLE_SIZE = 30
 
-    def __init__(self, video_db_path=None, user_db_path=None, title_feature_path=None):
+    def __init__(self, video_db_path=None, user_db_path=None, title_feature_path=None, audio_feature_path=None):
         print("init video feature")
         self.video_feature_tool = VideoFeature(video_db_path)
         print("init audio feature")
-        self.audio_feature_tool = AudioFeatureTool()
+        self.audio_feature_tool = AudioFeatureTool(audio_feature_path)
         print("init title feature")
         self.title_feature_tool = TitleAnalyTool(title_feature_path)
         print("init user feature")
@@ -26,7 +26,7 @@ class DataPreprocessor(object):
 
     def get_train_data(self):
         result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [], 'item_id': [],
-                  "video": [], 'feature_sizes': self.FEATURE_SIZES, 'tile_word_size': self.title_feature_tool.MAX_WORD}
+                  "video": [], 'audio': [], 'feature_sizes': self.FEATURE_SIZES, 'tile_word_size': self.title_feature_tool.MAX_WORD}
         step = 500
         for i in range(0, self.user_interactive_tool.get_max_id("ID"), step):
             print("data loading")
@@ -38,16 +38,19 @@ class DataPreprocessor(object):
                 result['finish'].append(finish)
                 result['index'].append(user_action)
                 result['value'].append([1 for _ in user_action])
-                title_list = list(self.title_feature_tool.get(item_id))
+                title_list = list(self.title_feature_tool.get_from_db(item_id))
                 result['title'].append([title_list[i] if i < len(title_list) else 0 for i in range(30)])
                 result['title_value'].append([1 if i < len(title_list) else 0 for i in range(30)])
                 result['video'].append(self.video_feature_tool.get_video_embedding(item_id))
+                result['audio'].append(self.audio_feature_tool.get_from_db(item_id))
             yield result
             result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [], 'item_id': [],
-                      "video": [], 'feature_sizes': self.FEATURE_SIZES,
+                      "video": [], 'audio': [], 'feature_sizes': self.FEATURE_SIZES,
                       'tile_word_size': self.title_feature_tool.MAX_WORD}
 
     def get_train_data_from_origin_file(self, video_path, title_path, interactive_file, audio_file_path):
+        self.FIELD_SIZE = 10
+        self.FEATURE_SIZES = [80000, 400, 900000, 500, 5, 90000, 80000, 30, 20, 4200000]
         self.video_feature_tool.get_all_from_origin_file(video_path)
         print("video init finish")
         self.audio_feature_tool.get_all_from_origin_file(audio_file_path)
@@ -62,24 +65,37 @@ class DataPreprocessor(object):
         val_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
                       'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
                       'tile_word_size': self.title_feature_tool.MAX_WORD}
+        train_count = 0
         val_count = 0
         for user in user_action_list:
-            if random.random() > 0.95 and val_count < 100000:
+            if val_count < 300000 and random.random() > 0.998:
                 result = val_result
+                val_count += 1
             else:
                 result = train_result
-            user_action, item_id, like, finish = user
+                train_count += 1
+            user_action, item_id, like, finish = json.loads(user)
+            user_action.append(item_id)
             result['item_id'].append(item_id)
             result['like'].append(like)
             result['finish'].append(finish)
             result['index'].append(user_action)
             result['value'].append([1 for _ in user_action])
-            title_list = self.title_feature_tool.get(item_id)
+            title_list = json.loads(self.title_feature_tool.get(item_id))
             result['title'].append([title_list[i] if i < len(title_list) else 0 for i in range(30)])
             result['title_value'].append([1 if i < len(title_list) else 0 for i in range(30)])
-            result['video'].append(self.video_feature_tool.get(item_id))
-            result['audio'].append(self.audio_feature_tool.get(item_id))
-        return train_result, val_result
+            result['video'].append(json.loads(self.video_feature_tool.get(item_id)))
+            result['audio'].append(json.loads(self.audio_feature_tool.get(item_id)))
+            if train_count >= 300000:
+                yield train_result, val_result
+                train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
+                                'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
+                                'tile_word_size': self.title_feature_tool.MAX_WORD}
+                # val_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
+                #               'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
+                #               'tile_word_size': self.title_feature_tool.MAX_WORD}
+                train_count = 0
+                # val_count = 0
 
 
 if __name__ == "__main__":

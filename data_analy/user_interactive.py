@@ -1,5 +1,6 @@
 import sqlite3
 import time
+import json
 
 
 class UserInteractiveTool(object):
@@ -138,7 +139,8 @@ class UserInteractiveTool(object):
         while line:
             count += 1
             if count % 1000000 == 0:
-                print(count)
+                print(count, len(self.user_interactivate_list))
+                # break
             column_list = line.split("\t")
             current_result = list()
             finish = int(column_list[6])
@@ -147,19 +149,26 @@ class UserInteractiveTool(object):
             for i in range(len(column_list)):
                 if i not in [2, 6, 7]:
                     current_result.append(int(column_list[i])+1)
-            self.user_interactivate_list.append([current_result, item_id, like, finish])
+
+            self.user_interactivate_list.append(json.dumps([current_result, item_id, like, finish]))
             line = track_file.readline()
         track_file.close()
         return self.user_interactivate_list
 
+    def get_all_from_json_file(self, user_interactive_file):
+        f = open(user_interactive_file, "r")
+        self.user_interactivate_list = json.load(f)
+        return self.user_interactivate_list
+
     def get(self, record_id_1, record_id_2):
         start = time.time()
-        sql = "SELECT * FROM USER_TEST WHERE id>=%s and id < %s" % (record_id_1, record_id_2)
+        sql = "SELECT * FROM USER WHERE id>=%s and id < %s" % (record_id_1, record_id_2)
         result = list()
         cursor = self.cursor.execute(sql)
-        print("user consume", time.time() - start)
+        # print("user consume", time.time() - start)
         # print(cursor)
         for row in cursor:
+            # print("shit")
             # print(row)
             record = row
             # result["item_id"] = row[1]
@@ -195,14 +204,23 @@ class UserInteractiveTool(object):
 
 
 if __name__ == "__main__":
-    db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user_test.db"
+    import time
+    db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
     interactive_tool = UserInteractiveTool(db_path)
     # interactive_tool.create_table()
     # interactive_tool.create_table()
-    interactive_tool.insert("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_test_no_anwser.txt")
+    # interactive_tool.insert("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_test_no_anwser.txt")
     # print(interactive_tool.get_max_id())
     # print(interactive_tool.get(100))
     # print(interactive_tool.get_features_size())
     # for i in ["ID", "UID", "USER_CITY", "ITEM_ID", "AUTHOR_ID", "ITEM_CITY", "CHANNEL", "FINISH", "LIKE", "MUSIC_ID",
     #           "DEVICE_ID", "CREATE_TIME", "VIDEO_DURATION"]:
     #     interactive_tool.get_max_id(i)
+    # user_interactivate_list = interactive_tool.get_all_from_origin_file("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.txt")
+    # f = open("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.json", "w")
+    # json.dump(user_interactivate_list, f)
+    # f.close()
+    # interactive_tool.get_all_from_json_file("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.json")
+    # print(len(interactive_tool.user_interactivate_list))
+    # time.sleep(100)
+    print(interactive_tool.get_max_id("ITEM_ID"))

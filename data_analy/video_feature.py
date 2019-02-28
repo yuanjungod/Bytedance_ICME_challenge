@@ -37,8 +37,9 @@ class VideoFeature(object):
         count = 0
         while line:
             count += 1
-            if count % 1000000 == 0:
+            if count % 500000 == 0:
                 print("video", count, len(self.video_dict))
+                # break
             # print(line)
             item = json.loads(line)
             self.video_dict[item["item_id"]] = json.dumps(item["video_feature_dim_128"])
@@ -46,8 +47,45 @@ class VideoFeature(object):
         video_file.close()
         return self.video_dict
 
+    @classmethod
+    def save_origin_to_json_file(cls, video_feature_path):
+        video_file = open(video_feature_path, 'r')
+        line = video_file.readline()
+        count = 0
+        file_count = 0
+        video_dict = dict()
+        while line:
+            count += 1
+            if count % 200000 == 0:
+                print("video", count, len(video_dict))
+            if count % 200000 == 0:
+                with open("/Volumes/Seagate Expansion Drive/byte/track2/track2_video_features_%s.json" % file_count, "w") as f:
+                    json.dump(video_dict, f)
+                file_count += 1
+                video_dict = dict()
+                # break
+            # print(line)
+            item = json.loads(line)
+            video_dict[item["item_id"]] = json.dumps(item["video_feature_dim_128"])
+
+            line = video_file.readline()
+        video_file.close()
+        with open("/Volumes/Seagate Expansion Drive/byte/track2/track2_video_features_%s.json" % file_count, "w") as f:
+            json.dump(video_dict, f)
+        file_count += 1
+
+    def get_all_from_json_file(self, video_json_file_list):
+        for video_json_file in video_json_file_list:
+            with open(video_json_file) as f:
+                print(f)
+                video_dict = json.load(f)
+                for key, value in video_dict.items():
+                    self.video_dict[key] = value
+        # f.close()
+        return self.video_dict
+
     def get(self, item_id):
-        return self.video_dict.get(item_id, list())
+        return self.video_dict.get(item_id, json.dumps([0 for _ in range(128)]))
 
     def get_video_embedding(self, item_id):
         start = time.time()
@@ -68,4 +106,13 @@ if __name__ == "__main__":
     # VideoFeature().insert("/Volumes/Seagate Expansion Drive/byte/track2/track2_video_features.txt")
     db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
     video_feature = VideoFeature(db_path)
-    print(video_feature.get_video_embedding(123))
+    # print(video_feature.get_video_embedding(123))
+    # video_dict = video_feature.get_all_from_origin_file("/Volumes/Seagate Expansion Drive/byte/track2/track2_video_features.txt")
+    # fp = open("/Volumes/Seagate Expansion Drive/byte/track2/track2_video_features.json", "w")
+    # json.dump(video_dict, fp)
+    # fp.close()
+    # video_feature.save_origin_to_json_file("/Volumes/Seagate Expansion Drive/byte/track2/track2_video_features.txt")
+    # print(len(video_feature.video_dict))
+    video_feature.get_all_from_json_file([
+        "/Volumes/Seagate Expansion Drive/byte/track2/track2_video_features_%s.json" % i for i in range(21)])
+    # time.sleep(200)
