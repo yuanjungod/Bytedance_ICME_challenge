@@ -36,10 +36,10 @@ class InterestPooling1(torch.nn.Module):
         # scale
         # din_att = din_att/(keys.size(-1)**0.5)
         din_att = self.last_activate_layer(din_att)
-        print("din_att3", din_att)
+        # print("din_att3", din_att)
         # [N,T,1]
         title_embedding = title_embedding.view(-1, self.k, self.embedding_len)
-        print("title_embedding", title_embedding.size())
+        # print("title_embedding", title_embedding.size())
         return torch.einsum('ij,ijk->ik', [din_att, title_embedding])
         # return torch.matmul(din_att, title_embedding)
 

@@ -52,6 +52,17 @@ class TitleAnalyTool(object):
             self.result_dict[int(row[0])] = [int(i) for i in json.loads(row[1])]
         print("title consume", time.time() - start)
 
+    def get_from_db(self, item_id):
+        # start = time.time()
+        self.result_dict = dict()
+        sql = "SELECT * FROM TITLE WHERE ITEM_ID=%s" % item_id
+        cursor = self.cursor.execute(sql)
+        result = list()
+        for row in cursor:
+            # print(row[0], row[1])
+            result = [int(i) for i in json.loads(row[1])]
+        return result
+
     def get_all_from_origin_file(self, file_path):
         title_file = open(file_path, 'r')
         self.result_dict = dict()
@@ -62,7 +73,7 @@ class TitleAnalyTool(object):
             if count % 1000000 == 0:
                 print(count)
             item = json.loads(line)
-            self.result_dict[item["item_id"]] = list(item["title_features"].keys())
+            self.result_dict[item["item_id"]] = json.dumps(list(item["title_features"].keys()))
             line = title_file.readline()
         title_file.close()
         return self.result_dict
@@ -71,7 +82,7 @@ class TitleAnalyTool(object):
         if self.result_dict is None:
             print("Please load data")
             exit()
-        return self.result_dict.get(item_id, list())
+        return self.result_dict.get(item_id, json.dumps(list()))
 
     def get_title_feature_size(self):
         start = time.time()

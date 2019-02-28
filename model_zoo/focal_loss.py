@@ -11,7 +11,7 @@ class FocalLoss(nn.Module):
         self.bce_loss = nn.BCELoss(weight=weight, size_average=size_average)
 
     def forward(self, inputs, targets):
-        print(-(1 - F.sigmoid(inputs)) ** self.gamma * F.logsigmoid(inputs))
+        # print(-(1 - F.sigmoid(inputs)) ** self.gamma * F.logsigmoid(inputs))
         return self.bce_loss(-(1 - F.sigmoid(inputs)) ** self.gamma * F.logsigmoid(inputs), targets)
 
 
