@@ -142,6 +142,8 @@ class UserInteractiveTool(object):
                 print(count, len(self.user_interactivate_list))
                 # break
             column_list = line.split("\t")
+            print(column_list)
+            exit()
             current_result = list()
             finish = int(column_list[6])
             like = int(column_list[7])
@@ -207,7 +209,7 @@ class UserInteractiveTool(object):
 if __name__ == "__main__":
     import time
     db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/user.db"
-    interactive_tool = UserInteractiveTool(db_path)
+    interactive_tool = UserInteractiveTool(db_path=db_path)
     # interactive_tool.create_table()
     # interactive_tool.create_table()
     # interactive_tool.insert("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_test_no_anwser.txt")
@@ -224,4 +226,5 @@ if __name__ == "__main__":
     # interactive_tool.get_all_from_json_file("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.json")
     # print(len(interactive_tool.user_interactivate_list))
     # time.sleep(100)
-    print(interactive_tool.get_max_id("ITEM_ID"))
+    # print(interactive_tool.get_max_id("ITEM_ID"))
+    interactive_tool.get_all_from_origin_file("/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.txt")
