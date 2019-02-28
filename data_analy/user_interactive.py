@@ -136,7 +136,6 @@ class UserInteractiveTool(object):
         track_file = open(user_interactivate_path)
         line = track_file.readline()
         count = 0
-        # ['57384', '52', '43192', '142828', '0', '0', '4513', '34178', '53085993699', '39\n']
         while line:
             count += 1
             if count % 1000000 == 0:
@@ -154,8 +153,8 @@ class UserInteractiveTool(object):
             for i in range(len(column_list)):
                 if i not in [2, 6, 7]:
                     current_result.append(int(column_list[i])+1)
-            print([current_result, item_id, like, finish])
-            exit()
+            # print([current_result, item_id, like, finish])
+            # exit()
             self.user_interactivate_list.append(json.dumps([current_result, item_id, like, finish]))
             line = track_file.readline()
         track_file.close()
@@ -223,12 +222,13 @@ if __name__ == "__main__":
     # for i in ["ID", "UID", "USER_CITY", "ITEM_ID", "AUTHOR_ID", "ITEM_CITY", "CHANNEL", "FINISH", "LIKE", "MUSIC_ID",
     #           "DEVICE_ID", "CREATE_TIME", "VIDEO_DURATION"]:
     #     interactive_tool.get_max_id(i)
-    # user_interactivate_list = interactive_tool.get_all_from_origin_file("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.txt")
-    # f = open("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.json", "w")
-    # json.dump(user_interactivate_list, f)
-    # f.close()
+    user_interactivate_list = interactive_tool.get_all_from_origin_file(
+        "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.txt")
+    f = open("/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.json", "w")
+    json.dump(user_interactivate_list, f)
+    f.close()
     # interactive_tool.get_all_from_json_file("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.json")
     # print(len(interactive_tool.user_interactivate_list))
     # time.sleep(100)
     # print(interactive_tool.get_max_id("ITEM_ID"))
-    interactive_tool.get_all_from_origin_file("/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.txt")
+    # interactive_tool.get_all_from_origin_file("/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.txt")
