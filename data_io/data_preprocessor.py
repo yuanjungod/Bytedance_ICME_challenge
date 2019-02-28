@@ -88,7 +88,7 @@ class DataPreprocessor(object):
             result['index'].append(user_action)
             result['value'].append([1 for _ in user_action])
             title_list = json.loads(self.title_feature_tool.get(item_id))
-            result['title'].append([title_list[i] if i < len(title_list) else 0 for i in range(30)])
+            result['title'].append([int(title_list[i]) if i < len(title_list) else 0 for i in range(30)])
             result['title_value'].append([1 if i < len(title_list) else 0 for i in range(30)])
             result['video'].append(json.loads(self.video_feature_tool.get(item_id)))
             result['audio'].append(json.loads(self.audio_feature_tool.get(item_id)))
