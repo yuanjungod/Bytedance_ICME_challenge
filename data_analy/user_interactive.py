@@ -136,22 +136,26 @@ class UserInteractiveTool(object):
         track_file = open(user_interactivate_path)
         line = track_file.readline()
         count = 0
+        # ['57384', '52', '43192', '142828', '0', '0', '4513', '34178', '53085993699', '39\n']
         while line:
             count += 1
             if count % 1000000 == 0:
                 print(count, len(self.user_interactivate_list))
                 # break
             column_list = line.split("\t")
-            print(column_list)
-            exit()
+            # print(column_list)
+            # exit()
             current_result = list()
             finish = int(column_list[6])
             like = int(column_list[7])
             item_id = int(column_list[2])
+            column_list[10] = self.one_hot_create_time(column_list[10])
+            column_list[11] = self.one_hot_video_duration(column_list[11])
             for i in range(len(column_list)):
                 if i not in [2, 6, 7]:
                     current_result.append(int(column_list[i])+1)
-
+            print([current_result, item_id, like, finish])
+            exit()
             self.user_interactivate_list.append(json.dumps([current_result, item_id, like, finish]))
             line = track_file.readline()
         track_file.close()
