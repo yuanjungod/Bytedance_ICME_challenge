@@ -51,13 +51,19 @@ class DataPreprocessor(object):
     def get_train_data_from_origin_file(self, video_path, title_path, interactive_file, audio_file_path):
         self.FIELD_SIZE = 10
         self.FEATURE_SIZES = [80000, 400, 900000, 500, 5, 90000, 80000, 30, 20, 4200000]
-        self.video_feature_tool.get_all_from_origin_file(video_path)
+        # self.video_feature_tool.get_all_from_origin_file(video_path)
+        self.video_feature_tool.get_all_from_json_file([
+            "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_video_features_%s.json" % i for i in range(21)])
         print("video init finish")
-        self.audio_feature_tool.get_all_from_origin_file(audio_file_path)
+        self.audio_feature_tool.get_all_from_json_file([
+            "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_audio_features_%s.json" % i for i in range(8)
+        ])
         print("audio init finish")
         self.title_feature_tool.get_all_from_origin_file(title_path)
         print("title init finish")
-        user_action_list = self.user_interactive_tool.get_all_from_origin_file(interactive_file)
+        # user_action_list = self.user_interactive_tool.get_all_from_origin_file(interactive_file)
+        user_action_list = self.user_interactive_tool.get_all_from_json_file(
+            "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.json")
         print("user action init finish")
         train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
                         'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
