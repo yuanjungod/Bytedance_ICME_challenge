@@ -23,6 +23,7 @@ class DataPreprocessor(object):
         self.title_feature_tool = TitleAnalyTool(title_feature_path)
         print("init user feature")
         self.user_interactive_tool = UserInteractiveTool(user_db_path)
+        self.user_action_list = None
 
     def get_train_data(self):
         result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [], 'item_id': [],
@@ -53,19 +54,20 @@ class DataPreprocessor(object):
         # self.FEATURE_SIZES = [80000, 400, 900000, 500, 5, 90000, 80000, 30, 20, 4200000]
         self.FEATURE_SIZES = [80000, 400, 900000, 500, 5, 90000, 80000, 30, 20]
         # self.video_feature_tool.get_all_from_origin_file(video_path)
-        self.video_feature_tool.get_all_from_json_file([
-            "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_video_features_%s.json" % i for i in range(21)])
-        print("video init finish")
-        self.audio_feature_tool.get_all_from_json_file([
-            "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_audio_features_%s.json" % i for i in range(8)
-        ])
-        print("audio init finish")
-        self.title_feature_tool.get_all_from_origin_file(title_path)
-        print("title init finish")
-        # user_action_list = self.user_interactive_tool.get_all_from_origin_file(interactive_file)
-        user_action_list = self.user_interactive_tool.get_all_from_json_file(
-            "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.json")
-        print("user action init finish")
+        if self.user_action_list is None:
+            self.video_feature_tool.get_all_from_json_file([
+                "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_video_features_%s.json" % i for i in range(21)])
+            print("video init finish")
+            self.audio_feature_tool.get_all_from_json_file([
+                "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_audio_features_%s.json" % i for i in range(8)
+            ])
+            print("audio init finish")
+            self.title_feature_tool.get_all_from_origin_file(title_path)
+            print("title init finish")
+            # user_action_list = self.user_interactive_tool.get_all_from_origin_file(interactive_file)
+            self.user_action_list = self.user_interactive_tool.get_all_from_json_file(
+                "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.json")
+            print("user action init finish")
         train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
                         'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
                         'tile_word_size': self.title_feature_tool.MAX_WORD}
@@ -74,7 +76,7 @@ class DataPreprocessor(object):
                       'tile_word_size': self.title_feature_tool.MAX_WORD}
         train_count = 0
         val_count = 0
-        for user in user_action_list:
+        for user in self.user_action_list:
             if val_count < 300000 and random.random() > 0.998:
                 result = val_result
                 val_count += 1

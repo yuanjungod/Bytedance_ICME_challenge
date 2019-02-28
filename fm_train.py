@@ -84,4 +84,5 @@ for epoch in range(total_epochs):
                      title_value_val=val_result["title_value"], total_epochs=total_epochs)
         count += 1
         load_data_time = time.time()
+    iter_data = data_prepro_tool.get_train_data_from_origin_file(video_path, title_path, interactive_file, audio_file_path)
 
