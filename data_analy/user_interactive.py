@@ -185,7 +185,7 @@ class UserInteractiveTool(object):
 
     def get_max_id(self, name):
         start = time.time()
-        sql = "SELECT max(%s) FROM USER_TEST" % name
+        sql = "SELECT max(%s) FROM USER" % name
         result = list()
         cursor = self.cursor.execute(sql)
         for row in cursor:
