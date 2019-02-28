@@ -157,6 +157,7 @@ class UserInteractiveTool(object):
 
     def get_all_from_json_file(self, user_interactive_file):
         f = open(user_interactive_file, "r")
+        print(f)
         self.user_interactivate_list = json.load(f)
         return self.user_interactivate_list
 
