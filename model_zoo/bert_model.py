@@ -362,10 +362,10 @@ class BertModel(BertPreTrainedModel):
         self.class_embedding = nn.Embedding(2, config.hidden_size)
         self.apply(self.init_bert_weights)
 
-    def forward(self, embeddings, attention_mask=None, output_all_encoded_layers=False):
+    def forward(self, embeddings, label, attention_mask=None, output_all_encoded_layers=False):
         # print("embeddings", embeddings.size())
-        size = embeddings.size()
-        label = torch.zeros(size[0], 1, dtype=torch.long)
+        # size = embeddings.size()
+        # label = torch.zeros(size[0], 1, dtype=torch.long).cuda()
         # like = torch.zeros(size[0], 1, dtype=torch.long)
         # finish = torch.ones(size[0], 1, dtype=torch.long)
         # like_embedding = self.class_embedding(like)
