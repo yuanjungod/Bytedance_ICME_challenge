@@ -9,17 +9,15 @@ from model_zoo.focal_loss import FocalLoss
 import random
 import logging
 from utils.utils import rand_train_data
+from common.logger import logger
 
-# 通过下面的方式进行简单配置输出方式与日志级别
 
 # video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
 # title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, 128,
-                 embedding_size=64, learning_rate=0.003)
+                 embedding_size=64, learning_rate=0.003, use_bert=False)
 # exit()
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
-                    datefmt='%m/%d/%Y %H:%M:%S', filename='logger.log', level=logging.INFO)
 
 """
     train model
@@ -66,7 +64,7 @@ iter_data = data_prepro_tool.get_train_data_from_origin_file(video_path, title_p
 for epoch in range(total_epochs):
 
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
-    logging.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
+    logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
     for item in iter_data:
         print("loading consume: %s" % (time.time() - load_data_time))
         train_result, val_result = item

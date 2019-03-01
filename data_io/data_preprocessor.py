@@ -24,6 +24,15 @@ class DataPreprocessor(object):
         print("init user feature")
         self.user_interactive_tool = UserInteractiveTool(user_db_path)
         self.user_action_list = None
+        self.train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
+                             'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
+                             'tile_word_size': self.title_feature_tool.MAX_WORD}
+        self.train_count = 0
+
+        self.val_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
+                           'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
+                           'tile_word_size': self.title_feature_tool.MAX_WORD}
+        self.val_count = 0
 
     def get_train_data(self):
         result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [], 'item_id': [],
@@ -68,21 +77,19 @@ class DataPreprocessor(object):
             self.user_action_list = self.user_interactive_tool.get_all_from_json_file(
                 "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.json")
             print("user action init finish")
-        train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
-                        'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
-                        'tile_word_size': self.title_feature_tool.MAX_WORD}
-        val_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
-                      'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
-                      'tile_word_size': self.title_feature_tool.MAX_WORD}
-        train_count = 0
-        val_count = 0
+        else:
+            random.shuffle(self.user_action_list)
+            self.train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
+                                 'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
+                                 'tile_word_size': self.title_feature_tool.MAX_WORD}
+
         for user in self.user_action_list:
-            if val_count < 300000 and random.random() > 0.998:
-                result = val_result
-                val_count += 1
+            if self.val_count < 300000 and random.random() > 0.998:
+                result = self.val_result
+                self.val_count += 1
             else:
-                result = train_result
-                train_count += 1
+                result = self.train_result
+                self.train_count += 1
             user_action, item_id, like, finish = json.loads(user)
             # user_action.append(item_id)
             result['item_id'].append(item_id)
@@ -95,12 +102,12 @@ class DataPreprocessor(object):
             result['title_value'].append([1 if i < len(title_list) else 0 for i in range(30)])
             result['video'].append(json.loads(self.video_feature_tool.get(item_id)))
             result['audio'].append(json.loads(self.audio_feature_tool.get(item_id)))
-            if train_count >= 300000:
-                yield train_result, val_result
-                train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
-                                'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
-                                'tile_word_size': self.title_feature_tool.MAX_WORD}
-                train_count = 0
+            if self.train_count >= 300000:
+                yield self.train_result, self.val_result
+                self.train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
+                                     'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
+                                     'tile_word_size': self.title_feature_tool.MAX_WORD}
+                self.train_count = 0
 
 
 if __name__ == "__main__":

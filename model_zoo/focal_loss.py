@@ -11,6 +11,6 @@ class FocalLoss(nn.Module):
         self.nll_loss = nn.NLLLoss(weight, size_average, ignore_index)
 
     def forward(self, inputs, targets):
-        return self.nll_loss((1 - F.softmax(inputs)) ** self.gamma * F.log_softmax(inputs), targets)
+        return self.nll_loss((1 - F.softmax(inputs, dim=-1)) ** self.gamma * F.log_softmax(inputs, dim=-1), targets)
 
 
