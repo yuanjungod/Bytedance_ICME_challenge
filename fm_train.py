@@ -1,5 +1,5 @@
 from data_io.data_preprocessor import DataPreprocessor
-from model_zoo.deep_fm import DeepFM
+from model_zoo.din_xdeep_bert import DeepFM
 import torch
 import torch.nn as nn
 import time
