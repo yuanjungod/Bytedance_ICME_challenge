@@ -97,38 +97,6 @@ except ImportError:
             return self.weight * x + self.bias
 
 
-class BertEmbeddings(nn.Module):
-    """Construct the embeddings from word, position and token_type embeddings.
-    """
-
-    def __init__(self, config):
-        super(BertEmbeddings, self).__init__()
-        self.word_embeddings = nn.Embedding(config.vocab_size, config.hidden_size)
-        self.position_embeddings = nn.Embedding(config.max_position_embeddings, config.hidden_size)
-        self.token_type_embeddings = nn.Embedding(config.type_vocab_size, config.hidden_size)
-
-        # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
-        # any TensorFlow checkpoint file
-        self.LayerNorm = BertLayerNorm(config.hidden_size, eps=1e-12)
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
-
-    def forward(self, input_ids, token_type_ids=None):
-        seq_length = input_ids.size(1)
-        position_ids = torch.arange(seq_length, dtype=torch.long, device=input_ids.device)
-        position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
-        if token_type_ids is None:
-            token_type_ids = torch.zeros_like(input_ids)
-
-        words_embeddings = self.word_embeddings(input_ids)
-        position_embeddings = self.position_embeddings(position_ids)
-        token_type_embeddings = self.token_type_embeddings(token_type_ids)
-
-        embeddings = words_embeddings + position_embeddings + token_type_embeddings
-        embeddings = self.LayerNorm(embeddings)
-        embeddings = self.dropout(embeddings)
-        return embeddings
-
-
 class BertSelfAttention(nn.Module):
     def __init__(self, config):
         super(BertSelfAttention, self).__init__()
@@ -139,7 +107,7 @@ class BertSelfAttention(nn.Module):
         self.num_attention_heads = config.num_attention_heads
         self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
         self.all_head_size = self.num_attention_heads * self.attention_head_size
-
+        # print("self.all_head_size", self.all_head_size)
         self.query = nn.Linear(config.hidden_size, self.all_head_size)
         self.key = nn.Linear(config.hidden_size, self.all_head_size)
         self.value = nn.Linear(config.hidden_size, self.all_head_size)
@@ -177,6 +145,7 @@ class BertSelfAttention(nn.Module):
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
         new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
         context_layer = context_layer.view(*new_context_layer_shape)
+        # print("context_layer", context_layer.size())
         return context_layer
 
 
@@ -210,7 +179,7 @@ class BertIntermediate(nn.Module):
     def __init__(self, config):
         super(BertIntermediate, self).__init__()
         self.dense = nn.Linear(config.hidden_size, config.intermediate_size)
-        if isinstance(config.hidden_act, str) or (sys.version_info[0] == 2 and isinstance(config.hidden_act, unicode)):
+        if isinstance(config.hidden_act, str):
             self.intermediate_act_fn = ACT2FN[config.hidden_act]
         else:
             self.intermediate_act_fn = config.hidden_act
@@ -267,15 +236,16 @@ class BertEncoder(nn.Module):
 
 
 class BertPooler(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, position):
         super(BertPooler, self).__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
         self.activation = nn.Tanh()
+        self.position = position
 
     def forward(self, hidden_states):
         # We "pool" the model by simply taking the hidden state corresponding
         # to the first token.
-        first_token_tensor = hidden_states[:, 0]
+        first_token_tensor = hidden_states[:, self.position]
         pooled_output = self.dense(first_token_tensor)
         pooled_output = self.activation(pooled_output)
         return pooled_output
@@ -285,7 +255,7 @@ class BertPredictionHeadTransform(nn.Module):
     def __init__(self, config):
         super(BertPredictionHeadTransform, self).__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
-        if isinstance(config.hidden_act, str) or (sys.version_info[0] == 2 and isinstance(config.hidden_act, unicode)):
+        if isinstance(config.hidden_act, str):
             self.transform_act_fn = ACT2FN[config.hidden_act]
         else:
             self.transform_act_fn = config.hidden_act
@@ -384,19 +354,29 @@ class BertModel(BertPreTrainedModel):
     def __init__(self, config):
         super(BertModel, self).__init__(config)
         self.encoder = BertEncoder(config)
-        self.pooler = BertPooler(config)
-        self.apply(self.init_bert_weights)
+        # self.like_pooler = BertPooler(config, 0)
+        # self.finish_pooler = BertPooler(config, 1)
+        self.label_pooler = BertPooler(config, 0)
+        self.like_class_label = nn.Linear(config.hidden_size, 1)
+        self.finish_class_label = nn.Linear(config.hidden_size, 1)
         self.class_embedding = nn.Embedding(2, config.hidden_size)
-        self.like_class_label = nn.Embedding(config.hidden_size, 1)
-        self.finish_class_label = nn.Embedding(config.hidden_size, 1)
+        self.apply(self.init_bert_weights)
 
     def forward(self, embeddings, attention_mask=None, output_all_encoded_layers=False):
+        # print("embeddings", embeddings.size())
         size = embeddings.size()
-        like_embedding = self.class_embedding(torch.zeros(size[0], size(1)))
-        finish_embedding = self.class_embedding(torch.ones(size[0], size(1)))
+        label = torch.zeros(size[0], 1, dtype=torch.long)
+        # like = torch.zeros(size[0], 1, dtype=torch.long)
+        # finish = torch.ones(size[0], 1, dtype=torch.long)
+        # like_embedding = self.class_embedding(like)
+        # finish_embedding = self.class_embedding(finish)
+        label_embedding = self.class_embedding(label)
+        # embeddings = torch.cat([like_embedding, finish_embedding, embeddings], 1)
+        embeddings = torch.cat([label_embedding, embeddings], 1)
+        # print("add label embeddings", embeddings.size())
 
-        embeddings = torch.cat([like_embedding, finish_embedding, embeddings], 1)
         if attention_mask is None:
+            size = embeddings.size()
             attention_mask = torch.ones(size[0], size[1])
 
         extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
@@ -404,14 +384,28 @@ class BertModel(BertPreTrainedModel):
         extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
 
-        encoded_layers = self.encoder(embeddings, extended_attention_mask,
-                                      output_all_encoded_layers=output_all_encoded_layers)
+        encoded_layers = self.encoder(embeddings, extended_attention_mask, output_all_encoded_layers=output_all_encoded_layers)
         sequence_output = encoded_layers[-1]
+        # like_pooled_output = self.like_pooler(sequence_output)
+        # finish_pooled_output = self.finish_pooler(sequence_output)
+        pooled_output = self.label_pooler(sequence_output)
 
-        return self.like_class_label(sequence_output[0]), self.finish_class_label(sequence_output[1])
+        # print("pooled_output", pooled_output.size())
+        # return self.like_class_label(like_pooled_output).view(-1),
+        # self.finish_class_label(finish_pooled_output).view(-1)
+        return pooled_output
 
 
 if __name__ == "__main__":
-    config = BertConfig()
+    import random
+    config = BertConfig(hidden_size=128, num_attention_heads=8, intermediate_size=512)
     bert_model = BertModel(config)
+    embeddings = torch.FloatTensor([[[random.random() for _ in range(config.hidden_size)] for
+                                     _ in range(20)] for _ in range(2)])
+    print("embeddings", embeddings.size())
+    pooled_output = bert_model(embeddings)
+    # print(like)
+    # print(finish)
+    print(pooled_output.size())
+
 

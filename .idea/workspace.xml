@@ -2,7 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="36d2dfc8-d9e8-4c48-a768-99b96160d3dd" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/common/logger.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_io/data_preprocessor.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_io/data_preprocessor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_fm_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/debug_fm_train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model_zoo/bert_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model_zoo/bert_model.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model_zoo/deep_fm.py" beforeDir="false" afterPath="$PROJECT_DIR$/model_zoo/deep_fm.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model_zoo/din_xdeep_bert.py" beforeDir="false" afterPath="$PROJECT_DIR$/model_zoo/din_xdeep_bert.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -15,8 +21,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model_zoo/deep_fm.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="344">
-              <caret line="641" column="21" selection-start-line="641" selection-start-column="21" selection-end-line="641" selection-end-column="21" />
+            <state relative-caret-position="335">
+              <caret line="611" column="34" lean-forward="true" selection-start-line="611" selection-start-column="34" selection-end-line="611" selection-end-column="34" />
               <folding>
                 <element signature="e#273#282#0" expanded="true" />
               </folding>
@@ -25,21 +31,21 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/model_zoo/fm.py">
+        <entry file="file://$PROJECT_DIR$/model_zoo/din_xdeep_bert.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-538">
-              <caret line="76" column="21" lean-forward="true" selection-start-line="76" selection-start-column="21" selection-end-line="76" selection-end-column="21" />
+            <state relative-caret-position="370">
+              <caret line="30" selection-start-line="30" selection-end-line="30" selection-end-column="32" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/fm_train2.py">
+        <entry file="file://$PROJECT_DIR$/model_zoo/bert_model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="595">
-              <caret line="65" column="36" lean-forward="true" selection-start-line="65" selection-start-column="36" selection-end-line="65" selection-end-column="36" />
+            <state relative-caret-position="371">
+              <caret line="398" column="26" lean-forward="true" selection-start-line="398" selection-start-column="26" selection-end-line="398" selection-end-column="26" />
               <folding>
-                <element signature="e#0#54#0" expanded="true" />
+                <element signature="e#735#817#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -48,11 +54,20 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/debug_fm_train.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-113">
-              <caret line="72" column="45" selection-start-line="72" selection-start-column="31" selection-end-line="72" selection-end-column="45" />
+            <state relative-caret-position="93">
+              <caret line="80" column="5" lean-forward="true" selection-start-line="80" selection-start-column="5" selection-end-line="80" selection-end-column="5" />
               <folding>
                 <element signature="e#0#54#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/common/logger.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="204">
+              <caret line="12" column="23" lean-forward="true" selection-start-line="12" selection-start-column="23" selection-end-line="12" selection-end-column="23" />
             </state>
           </provider>
         </entry>
@@ -70,10 +85,22 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/utils/utils.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="408">
+              <caret line="24" column="8" selection-start-line="24" selection-start-column="8" selection-end-line="24" selection-end-column="8" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/data_io/data_preprocessor.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="347">
-              <caret line="86" column="16" lean-forward="true" selection-start-line="86" selection-start-column="16" selection-end-line="86" selection-end-column="16" />
+            <state relative-caret-position="697">
+              <caret line="41" selection-start-line="41" selection-end-line="41" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
               </folding>
@@ -87,30 +114,6 @@
             <state split_layout="SECOND">
               <first_editor />
               <second_editor />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/data_preprocessor.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="244">
-              <caret line="32" selection-start-line="32" selection-end-line="32" />
-              <folding>
-                <element signature="e#0#38#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/data_analy/title_analy.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="149">
-              <caret line="80" column="8" selection-start-line="80" selection-start-column="8" selection-end-line="80" selection-end-column="8" />
-              <folding>
-                <element signature="e#0#11#0" expanded="true" />
-              </folding>
             </state>
           </provider>
         </entry>
@@ -138,15 +141,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>class_num</find>
-      <find>gamma</find>
-      <find>train_result</find>
-      <find>total_count</find>
-      <find>deep_layers_activation</find>
-      <find>.video_feature_size</find>
-      <find>video_line</find>
-      <find>cuda</find>
-      <find>title_embedding</find>
       <find>bag_value_cnts</find>
       <find>cin_deep_layers</find>
       <find>cin_deep_dropouts</find>
@@ -163,11 +157,20 @@
       <find>y_pred</find>
       <find>fuck</find>
       <find>outputs size</find>
-      <find>size</find>
       <find>print</find>
       <find>one_hot_create_time</find>
       <find>total count</find>
       <find>eval_by_batch</find>
+      <find>.hidden_size</find>
+      <find>BertIntermediate</find>
+      <find>size</find>
+      <find>BertSelfAttention</find>
+      <find>intermediate_size</find>
+      <find>BertPooler</find>
+      <find>context_layer</find>
+      <find>Init deep part succeed</find>
+      <find>basicConfig</find>
+      <find>logging</find>
     </findStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$/data_analy</dir>
@@ -192,8 +195,6 @@
         <option value="$PROJECT_DIR$/fm_submit_and_test.py" />
         <option value="$PROJECT_DIR$/utils/utils.py" />
         <option value="$PROJECT_DIR$/model_zoo/din_xdeepfm.py" />
-        <option value="$PROJECT_DIR$/model_zoo/din_xdeep_bert.py" />
-        <option value="$PROJECT_DIR$/model_zoo/bert_model.py" />
         <option value="$PROJECT_DIR$/fm_train2.py" />
         <option value="$PROJECT_DIR$/data_analy/face_feature.py" />
         <option value="$PROJECT_DIR$/model_zoo/focal_loss.py" />
@@ -201,16 +202,20 @@
         <option value="$PROJECT_DIR$/data_analy/video_feature.py" />
         <option value="$PROJECT_DIR$/data_analy/title_analy.py" />
         <option value="$PROJECT_DIR$/data_analy/audio_feature.py" />
-        <option value="$PROJECT_DIR$/debug_fm_train.py" />
         <option value="$PROJECT_DIR$/data_analy/user_interactive.py" />
-        <option value="$PROJECT_DIR$/data_io/data_preprocessor.py" />
         <option value="$PROJECT_DIR$/fm_train.py" />
+        <option value="$PROJECT_DIR$/data_io/data_preprocessor.py" />
+        <option value="$PROJECT_DIR$/model_zoo/bert_model.py" />
+        <option value="$PROJECT_DIR$/common/test.py" />
+        <option value="$PROJECT_DIR$/debug_fm_train.py" />
+        <option value="$PROJECT_DIR$/common/logger.py" />
+        <option value="$PROJECT_DIR$/model_zoo/din_xdeep_bert.py" />
         <option value="$PROJECT_DIR$/model_zoo/deep_fm.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="43" />
+    <option name="x" value="50" />
     <option name="y" value="23" />
     <option name="width" value="1357" />
     <option name="height" value="831" />
@@ -252,11 +257,6 @@
               <item name="Bytedance_ICME_challenge" type="462c0819:PsiDirectoryNode" />
               <item name="model_zoo" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="Bytedance_ICME_challenge" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Bytedance_ICME_challenge" type="462c0819:PsiDirectoryNode" />
-              <item name="utils" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
@@ -280,28 +280,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.user_interactive">
-    <configuration name="audio_feature" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="Bytedance_ICME_challenge" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/data_analy" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/data_analy/audio_feature.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Python.fm_train">
     <configuration name="bert_model" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Bytedance_ICME_challenge" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -315,6 +294,27 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/model_zoo/bert_model.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="din_xdeep_bert" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Bytedance_ICME_challenge" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/model_zoo" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/model_zoo/din_xdeep_bert.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -344,6 +344,27 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Bytedance_ICME_challenge" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/common" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/common/test.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="user_interactive" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Bytedance_ICME_challenge" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -365,34 +386,13 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="video_feature" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="Bytedance_ICME_challenge" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/data_analy" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/data_analy/video_feature.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.user_interactive" />
         <item itemvalue="Python.fm_train" />
-        <item itemvalue="Python.audio_feature" />
-        <item itemvalue="Python.video_feature" />
+        <item itemvalue="Python.test" />
+        <item itemvalue="Python.din_xdeep_bert" />
         <item itemvalue="Python.bert_model" />
+        <item itemvalue="Python.user_interactive" />
       </list>
     </recent_temporary>
   </component>
@@ -410,7 +410,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="43" y="23" width="1357" height="831" extended-state="0" />
+    <frame x="50" y="23" width="1357" height="831" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18937126" />
@@ -418,14 +418,14 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49888808" weight="0.31529093" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.498503" weight="0.4384303" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info anchor="bottom" id="Terminal" order="8" sideWeight="0.4989429" visible="true" weight="0.3301759" />
-      <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.5011119" side_tool="true" weight="0.37483084" />
+      <window_info anchor="bottom" id="Terminal" order="8" sideWeight="0.4989429" weight="0.48173207" />
+      <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.50149703" side_tool="true" weight="0.6982409" />
       <window_info anchor="bottom" id="Python Console" order="10" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -433,12 +433,6 @@
     </layout>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/utils/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/model_zoo/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$USER_HOME$/anaconda3/envs/PyTorch-Tutorial/lib/python3.6/site-packages/tensorflow/python/estimator/training.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-2899">
@@ -529,16 +523,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/like_logger.log" />
-    <entry file="file://$PROJECT_DIR$/utils/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="612">
-          <caret line="37" column="4" selection-start-line="37" selection-start-column="4" selection-end-line="37" selection-end-column="4" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda3/envs/PyTorch-Tutorial/lib/python3.6/random.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="12614">
@@ -604,32 +588,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/model_zoo/din_xdeep_bert.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="6105">
-          <caret line="700" column="27" lean-forward="true" selection-start-line="700" selection-start-column="27" selection-end-line="700" selection-end-column="27" />
-          <folding>
-            <element signature="e#273#282#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/model_zoo/din_xdeepfm.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="221">
           <caret line="456" column="34" selection-start-line="456" selection-start-column="24" selection-end-line="456" selection-end-column="34" />
           <folding>
             <element signature="e#23#32#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/model_zoo/bert_model.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="437">
-          <caret line="408" column="19" lean-forward="true" selection-start-line="408" selection-start-column="19" selection-end-line="408" selection-end-column="19" />
-          <folding>
-            <element signature="e#735#817#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -749,24 +713,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SECOND">
-          <first_editor />
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/debug_fm_train.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-113">
-          <caret line="72" column="45" selection-start-line="72" selection-start-column="31" selection-end-line="72" selection-end-column="45" />
-          <folding>
-            <element signature="e#0#54#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/model_zoo/fm.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-538">
@@ -784,16 +730,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/data_io/data_preprocessor.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="347">
-          <caret line="86" column="16" lean-forward="true" selection-start-line="86" selection-start-column="16" selection-end-line="86" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/fm_train.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="312">
@@ -804,10 +740,79 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SECOND">
+          <first_editor />
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="408">
+          <caret line="24" column="8" selection-start-line="24" selection-start-column="8" selection-end-line="24" selection-end-column="8" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_zoo/bert_model.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="371">
+          <caret line="398" column="26" lean-forward="true" selection-start-line="398" selection-start-column="26" selection-end-line="398" selection-end-column="26" />
+          <folding>
+            <element signature="e#735#817#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/data_io/data_preprocessor.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="697">
+          <caret line="41" selection-start-line="41" selection-end-line="41" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="6" column="20" lean-forward="true" selection-start-line="6" selection-start-column="20" selection-end-line="6" selection-end-column="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_fm_train.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="93">
+          <caret line="80" column="5" lean-forward="true" selection-start-line="80" selection-start-column="5" selection-end-line="80" selection-end-column="5" />
+          <folding>
+            <element signature="e#0#54#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/logger.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="12" column="23" lean-forward="true" selection-start-line="12" selection-start-column="23" selection-end-line="12" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_zoo/din_xdeep_bert.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="370">
+          <caret line="30" selection-start-line="30" selection-end-line="30" selection-end-column="32" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/model_zoo/deep_fm.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="344">
-          <caret line="641" column="21" selection-start-line="641" selection-start-column="21" selection-end-line="641" selection-end-column="21" />
+        <state relative-caret-position="335">
+          <caret line="611" column="34" lean-forward="true" selection-start-line="611" selection-start-column="34" selection-end-line="611" selection-end-column="34" />
           <folding>
             <element signature="e#273#282#0" expanded="true" />
           </folding>

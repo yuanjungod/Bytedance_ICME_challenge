@@ -1,5 +1,6 @@
 from data_io.data_preprocessor import DataPreprocessor
-from model_zoo.deep_fm import DeepFM
+# from model_zoo.deep_fm import DeepFM
+from model_zoo.din_xdeep_bert import DeepFM
 import torch
 import torch.nn as nn
 import time
@@ -7,7 +8,7 @@ import os
 import json
 from model_zoo.focal_loss import FocalLoss
 import random
-import logging
+from common.logger import logger
 from utils.utils import rand_train_data
 
 # 通过下面的方式进行简单配置输出方式与日志级别
@@ -18,12 +19,10 @@ user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 # video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
 # title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
-task = "finish"
 deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, 128,
                  embedding_size=64, learning_rate=0.003)
 # exit()
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
-                    datefmt='%m/%d/%Y %H:%M:%S', filename='%s_logger.log' % task, level=logging.INFO)
+
 
 """
     train model
@@ -61,20 +60,20 @@ elif model.optimizer_type == 'adag':
 
 total_epochs = 3
 
-video_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/video.db"
-title_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/title.db"
-interactive_file = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/user.db"
-audio_file_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/audio.db"
-# video_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
-# title_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
-# interactive_file = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
-# audio_file_path = "/Volumes/Seagate Expansion Drive/byte/track2/audio.db"
+# video_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/video.db"
+# title_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/title.db"
+# interactive_file = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/user.db"
+# audio_file_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/audio.db"
+video_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
+title_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
+interactive_file = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
+audio_file_path = "/Volumes/Seagate Expansion Drive/byte/track2/audio.db"
 data_prepro_tool = DataPreprocessor(video_path, interactive_file, title_path, audio_file_path)
 result_list = data_prepro_tool.get_train_data()
 for epoch in range(total_epochs):
 
-    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
-    logging.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
+    # print("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
+    logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
     # for result in os.listdir(train_dir):
     #     fp = open(os.path.join(train_dir, result), "r")
     #     result = json.load(fp)
@@ -91,7 +90,7 @@ for epoch in range(total_epochs):
         # print(result["index"][0])
         deep_fm.fit2(model, optimizer, criterion, result["index"], result["value"], result["video"], result['audio'],
                      result["title"], result["title_value"], result["like"], result["finish"], count,
-                     save_path="/Volumes/Seagate Expansion Drive/byte/track2/models/%s" % task,
+                     save_path="/Volumes/Seagate Expansion Drive/byte/track2/models/",
                      Xi_valid=None, Xv_valid=None, y_like_valid=None, y_finish_valid=None,
                      video_feature_val=None, title_feature_val=None, title_value_val=None, total_epochs=total_epochs)
         count += 1
