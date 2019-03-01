@@ -384,6 +384,7 @@ class BertModel(BertPreTrainedModel):
         extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
 
+        extended_attention_mask = extended_attention_mask.cuda()
         encoded_layers = self.encoder(embeddings, extended_attention_mask, output_all_encoded_layers=output_all_encoded_layers)
         sequence_output = encoded_layers[-1]
         # like_pooled_output = self.like_pooler(sequence_output)
