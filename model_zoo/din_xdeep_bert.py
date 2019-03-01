@@ -281,7 +281,8 @@ class DeepFM(torch.nn.Module):
                 concat_input_size = concat_input_size + sum(self.cin_layer_sizes[1:])
         if self.use_bert:
             concat_input_size += self.embedding_size
-        self.concat_linear_layer = nn.Linear(concat_input_size, self.n_class)
+        self.like_concat_linear_layer = nn.Linear(concat_input_size, self.n_class)
+        self.finish_concat_linear_layer = nn.Linear(concat_input_size, self.n_class)
 
         print("Init succeed")
 
@@ -506,8 +507,9 @@ class DeepFM(torch.nn.Module):
                 concat_input = cin_result
         if self.use_bert:
             concat_input = torch.cat([concat_input, bert_result], 1)
-        total_sum = self.concat_linear_layer(concat_input)
-        return total_sum
+        like = self.like_concat_linear_layer(concat_input)
+        finish = self.finish_concat_linear_layer(concat_input)
+        return like, finish
 
     def fit2(self, model, optimizer, criterion, Xi_train, Xv_train, video_feature, audio_feature, title_feature, title_value,
              y_like_train, y_finish_train, count, Xi_valid=None, Xv_valid=None, y_like_valid=None, y_finish_valid=None,
@@ -530,7 +532,7 @@ class DeepFM(torch.nn.Module):
         Xv_train = np.array(Xv_train)
         y_like_train = np.array(y_like_train)
         y_finish_train = np.array(y_finish_train)
-        y_train = np.concatenate([y_like_train.reshape(-1, 1), y_finish_train.reshape(-1, 1)], 1)
+        # y_train = np.concatenate([y_like_train.reshape(-1, 1), y_finish_train.reshape(-1, 1)], 1)
         x_size = Xi_train.shape[0]
 
         if self.verbose:
@@ -549,8 +551,10 @@ class DeepFM(torch.nn.Module):
                 break
             batch_xi = Variable(torch.LongTensor(Xi_train[offset:end]))
             batch_xv = Variable(torch.FloatTensor(Xv_train[offset:end]))
-            batch_label = Variable(torch.cat([torch.FloatTensor(y_like_train[offset:end]).view(-1, 1),
-                                              torch.FloatTensor(y_finish_train[offset:end]).view(-1, 1)], -1))
+            batch_y_like_train = torch.LongTensor(y_like_train[offset:end])
+            batch_y_finish_train = torch.LongTensor(y_finish_train[offset:end])
+            # batch_label = Variable(torch.cat([torch.FloatTensor(y_like_train[offset:end]).view(-1, 1),
+            #                                   torch.FloatTensor(y_finish_train[offset:end]).view(-1, 1)], -1))
 
             batch_video_feature = Variable(torch.FloatTensor(video_feature[offset:end]))
             batch_audio_feature = Variable(torch.FloatTensor(audio_feature[offset:end]))
@@ -559,14 +563,19 @@ class DeepFM(torch.nn.Module):
             batch_title_feature = Variable(torch.LongTensor(title_feature[offset:end]))
 
             if self.use_cuda:
-                batch_xi, batch_xv, batch_label, batch_video_feature, batch_audio_feature, batch_title_value, batch_title_feature = \
-                    batch_xi.cuda(), batch_xv.cuda(), batch_label.cuda(), batch_video_feature.cuda(), \
+                batch_xi, batch_xv, batch_y_like_train, batch_y_finish_train, batch_video_feature, batch_audio_feature, batch_title_value, batch_title_feature = \
+                    batch_xi.cuda(), batch_xv.cuda(), batch_y_like_train.cuda(), batch_y_finish_train.cuda(), batch_video_feature.cuda(), \
                     batch_audio_feature.cuda(), batch_title_value.cuda(), batch_title_feature.cuda()
             optimizer.zero_grad()
 
             outputs = model(batch_xi, batch_xv, batch_video_feature, batch_audio_feature, batch_title_feature, batch_title_value)
             # print("outputs size: ", outputs.size())
-            loss = criterion(outputs, batch_label)
+            like, finish = outputs
+            print("like", like.size())
+            print("batch_y_like_train", batch_y_like_train.size())
+            like_loss = criterion(like, batch_y_like_train)
+            finish_loss = criterion(finish, batch_y_finish_train)
+            loss = like_loss + finish_loss
             loss.backward()
 
             for param_group in optimizer.param_groups:
@@ -579,7 +588,7 @@ class DeepFM(torch.nn.Module):
             total_loss += loss.data
             if self.verbose:
                 if i % 100 == 99:  # print every 100 mini-batches
-                    eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_audio_feature, batch_title_feature, batch_title_value, batch_label)
+                    eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_audio_feature, batch_title_feature, batch_title_value, batch_y_like_train, batch_y_finish_train)
                     print('[%d, %5d] loss: %.6f metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
                           (count + 1, i + 1, total_loss / 100.0, eval[0], eval[1], current_learn_rate,
                            time() - batch_begin_time))
@@ -590,7 +599,7 @@ class DeepFM(torch.nn.Module):
             if save_path and self.total_count % 5000 == 0:
                 torch.save(self.state_dict(), os.path.join(save_path, "byte_%s.model" % self.total_count))
 
-        train_loss, train_eval = self.eval_by_batch(Xi_train, Xv_train, y_train, x_size, video_feature, audio_feature, title_feature, title_value)
+        train_loss, train_eval = self.eval_by_batch(Xi_train, Xv_train, y_like_train, y_finish_train, x_size, video_feature, audio_feature, title_feature, title_value)
         print('*' * 50)
         print('train [%d] loss: %.6f metric: like-%.6f,finish-%.6f, learn rate: %s, time: %.1f s' %
               (count + 1, train_loss, train_eval[0], train_eval[1], current_learn_rate, time() - epoch_begin_time))
@@ -614,7 +623,7 @@ class DeepFM(torch.nn.Module):
             y_valid = np.concatenate([y_like_valid.reshape(-1, 1), y_finish_valid.reshape(-1, 1)], 1)
             x_valid_size = Xi_valid.shape[0]
             valid_loss, valid_eval = self.eval_by_batch(
-                Xi_valid, Xv_valid, y_valid, x_valid_size, video_feature_val, audio_feature_val,
+                Xi_valid, Xv_valid, y_like_valid, y_finish_valid, x_valid_size, video_feature_val, audio_feature_val,
                 title_feature_val, title_value_val)
             # valid_result.append(valid_eval)
             print('valid*' * 20)
@@ -626,15 +635,18 @@ class DeepFM(torch.nn.Module):
             logger.info(json.dumps(log_json))
             print('valid*' * 20)
 
-    def eval_by_batch(self, Xi, Xv, y, x_size, video_feature, audio_feature, title_feature, title_value):
+    def eval_by_batch(self, Xi, Xv, like_y, finish_y, x_size, video_feature, audio_feature, title_feature, title_value):
         total_loss = 0.0
-        y_pred = []
+        like_y_pred = []
+        finish_y_pred = []
+        # y_pred = []
         if self.use_ffm:
             batch_size = 16384 * 2
         else:
             batch_size = 256
         batch_iter = x_size // batch_size
-        criterion = F.binary_cross_entropy_with_logits
+        # criterion = F.binary_cross_entropy_with_logits
+        criterion = F.cross_entropy
         model = self.eval()
         for i in range(batch_iter + 1):
             offset = i * batch_size
@@ -643,27 +655,40 @@ class DeepFM(torch.nn.Module):
                 break
             batch_xi = Variable(torch.LongTensor(Xi[offset:end]))
             batch_xv = Variable(torch.FloatTensor(Xv[offset:end]))
-            batch_y = Variable(torch.FloatTensor(y[offset:end]))
+            batch_like_y = Variable(torch.LongTensor(like_y[offset:end]))
+            batch_finish_y = Variable(torch.LongTensor(finish_y[offset:end]))
             batch_video_feature = Variable(torch.FloatTensor(video_feature[offset:end]))
             batch_audio_feature = Variable(torch.FloatTensor(audio_feature[offset:end]))
             batch_title_feature = Variable(torch.LongTensor(title_feature[offset:end]))
             batch_title_value = Variable(torch.FloatTensor(title_value[offset:end]))
             if self.use_cuda:
-                batch_xi, batch_xv, batch_y, batch_video_feature, batch_audio_feature, batch_title_feature, batch_title_value = \
-                    batch_xi.cuda(), batch_xv.cuda(), batch_y.cuda(), batch_video_feature.cuda(), \
+                batch_xi, batch_xv, batch_like_y, batch_finish_y, batch_video_feature, batch_audio_feature, batch_title_feature, batch_title_value = \
+                    batch_xi.cuda(), batch_xv.cuda(), batch_like_y.cuda(), batch_finish_y.cuda(), batch_video_feature.cuda(), \
                     batch_audio_feature.cuda(), batch_title_feature.cuda(), batch_title_value.cuda()
             outputs = model(batch_xi, batch_xv, batch_video_feature, batch_audio_feature, batch_title_feature, batch_title_value)
             # print("outputs", outputs)
-            pred = torch.sigmoid(outputs).cpu()
-            y_pred.append(pred.data.numpy())
-            loss = criterion(outputs, batch_y)
+            like, finish = outputs
+            like_pred = F.softmax(like).cpu()
+            finish_pred = F.softmax(finish).cpu()
+            # pred = torch.sigmoid(outputs).cpu()
+            like_y_pred.append(like_pred.data.numpy())
+            finish_y_pred.append(finish_pred.data.numpy())
+            # y_pred.append(pred.data.numpy())
+            # print("eval like", like.size())
+            # print("eval batch_like_y", batch_like_y.size())
+            like_loss = criterion(like, batch_like_y)
+            finish_loss = criterion(finish, batch_finish_y)
+            loss = like_loss + finish_loss
             total_loss += loss.data * (end - offset)
         # y_pred = np.array(y_pred)
-        y_pred = np.concatenate(y_pred, 0)
+        # y_pred = np.concatenate(y_pred, 0)
+        # like_y_pred
+        like_y_pred = np.concatenate(like_y_pred, 0)
+        finish_y_pred = np.concatenate(finish_y_pred, 0)
         # size = y_pred.shape
         # print("y_pred", y_pred.shape, y_pred[0].shape)
         # y_pred = y_pred.reshape(-1, 2)
-        total_metric = [self.eval_metric(y[:, 0], y_pred[:, 0]), self.eval_metric(y[:, 1], y_pred[:, 1])]
+        total_metric = [self.eval_metric(like_y, like_y_pred[:, 1]), self.eval_metric(finish_y, finish_y_pred[:, 1])]
         return total_loss / x_size, total_metric
 
     # shuffle three lists simutaneously
@@ -744,15 +769,19 @@ class DeepFM(torch.nn.Module):
         :return: output, numpy
         """
         model = self.eval()
-        pred = torch.sigmoid(model(Xi, Xv, video_feature, audio_feature, title_feature, title_value)).cpu()
-        return pred.data.numpy()
+        out_put = model(Xi, Xv, video_feature, audio_feature, title_feature, title_value)
+        like_out_put, finish_out_put = out_put
+        like_out_put = F.softmax(like_out_put)
+        finish_out_put = F.softmax(finish_out_put)
+        # pred = torch.sigmoid(model(Xi, Xv, video_feature, audio_feature, title_feature, title_value)).cpu()
+        return like_out_put.data.numpy(), finish_out_put.data.numpy()
 
-    def evaluate(self, Xi, Xv, video_feature, audio_feature, title_feature, title_value, y):
+    def evaluate(self, Xi, Xv, video_feature, audio_feature, title_feature, title_value, like_y, finish_y):
         """
         :param Xi: tensor of feature index
         :param Xv: tensor of feature value
         :param y: tensor of labels
         :return: metric of the evaluation
         """
-        y_pred = self.inner_predict_proba(Xi, Xv, video_feature, audio_feature, title_feature, title_value)
-        return self.eval_metric(y.cpu().data.numpy()[:, 0], y_pred[:, 0]), self.eval_metric(y.cpu().data.numpy()[:, 1], y_pred[:, 1])
+        like_out_put, finish_out_put = self.inner_predict_proba(Xi, Xv, video_feature, audio_feature, title_feature, title_value)
+        return self.eval_metric(like_y.cpu().data.numpy(), like_out_put[:, 1]), self.eval_metric(finish_y.cpu().data.numpy(), finish_out_put[:, 1])
