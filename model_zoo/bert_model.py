@@ -365,7 +365,7 @@ class BertModel(BertPreTrainedModel):
     def forward(self, embeddings, attention_mask=None, output_all_encoded_layers=False):
         # print("embeddings", embeddings.size())
         size = embeddings.size()
-        label = torch.zeros(size[0], 1, dtype=torch.long)
+        label = torch.zeros(size[0], 1, dtype=torch.long).cuda()
         # like = torch.zeros(size[0], 1, dtype=torch.long)
         # finish = torch.ones(size[0], 1, dtype=torch.long)
         # like_embedding = self.class_embedding(like)
