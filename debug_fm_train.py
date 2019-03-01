@@ -13,12 +13,12 @@ from utils.utils import rand_train_data
 
 # 通过下面的方式进行简单配置输出方式与日志级别
 
-video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
-title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
-user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 # video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
 # title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
+video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
+title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
+user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 deep_fm = DeepFM(9, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20], 128, 128,
                  embedding_size=64, learning_rate=0.003)
 # exit()
