@@ -27,7 +27,7 @@ from torch.autograd import Variable
 from utils.utils import warmup_linear
 import torch.backends.cudnn
 from .interest_pooling import InterestPooling1
-import logging
+from common.logger import logger
 import json
 
 """
@@ -224,7 +224,7 @@ class DeepFM(torch.nn.Module):
                     cin part
                 """
         if self.use_cin:
-            logging.info("Init cin part")
+            logger.info("Init cin part")
             # conv1d init
             in_channels = self.field_size
             for i, layer_size in enumerate(self.cin_layer_sizes[:-1]):
@@ -252,7 +252,7 @@ class DeepFM(torch.nn.Module):
                         setattr(self, 'cin_deep_bn_' + str(i + 1), nn.BatchNorm1d(self.cin_deep_layers[i]))
                     if len(self.cin_deep_dropouts) != 0:
                         setattr(self, 'cin_linear_' + str(i + 1) + '_dropout', nn.Dropout(self.cin_deep_dropouts[i]))
-            logging.info("Init cin part succeed")
+            logger.info("Init cin part succeed")
 
         """
             linear_layer
@@ -576,7 +576,7 @@ class DeepFM(torch.nn.Module):
         log_json = {"count": count + 1, "loss": "%.6f" % train_loss, "like_auc": train_eval[0],
                     "finish_auc": train_eval[1], "current_learn_rate": current_learn_rate,
                     "time": time() - epoch_begin_time}
-        logging.info(json.dumps(log_json))
+        logger.info(json.dumps(log_json))
         print('*' * 50)
 
         if Xi_valid:
@@ -602,7 +602,7 @@ class DeepFM(torch.nn.Module):
             log_json = {"count": count + 1, "loss": valid_loss, "like_auc": valid_eval[0],
                         "finish_auc": valid_eval[1], "current_learn_rate": current_learn_rate,
                         "time": time() - epoch_begin_time}
-            logging.info(json.dumps(log_json))
+            logger.info(json.dumps(log_json))
             print('valid*' * 20)
 
     def eval_by_batch(self, Xi, Xv, y, x_size, video_feature, audio_feature, title_feature, title_value):
@@ -637,10 +637,11 @@ class DeepFM(torch.nn.Module):
             y_pred.append(pred.data.numpy())
             loss = criterion(outputs, batch_y)
             total_loss += loss.data * (end - offset)
-        y_pred = np.array(y_pred)
+        # y_pred = np.array(y_pred)
+        y_pred = np.concatenate(y_pred, 0)
         # size = y_pred.shape
-        print("y_pred", y_pred)
-        y_pred = y_pred.reshape(-1, 2)
+        # print("y_pred", y_pred.shape, y_pred[0].shape)
+        # y_pred = y_pred.reshape(-1, 2)
         total_metric = [self.eval_metric(y[:, 0], y_pred[:, 0]), self.eval_metric(y[:, 1], y_pred[:, 1])]
         return total_loss / x_size, total_metric
 
@@ -656,8 +657,7 @@ class DeepFM(torch.nn.Module):
     def training_termination(self, valid_result):
         if len(valid_result) > 4:
             if self.greater_is_better:
-                if valid_result[-1] < valid_result[-2] and \
-                        valid_result[-2] < valid_result[-3] and \
+                if valid_result[-1] < valid_result[-2] and valid_result[-2] < valid_result[-3] and \
                         valid_result[-3] < valid_result[-4]:
                     return True
             else:
@@ -679,13 +679,16 @@ class DeepFM(torch.nn.Module):
         pred = torch.sigmoid(model(Xi, Xv)).cpu()
         return pred
 
-    def predict_proba(self, Xi, Xv, video_feature, title_feature, title_value):
+    def predict_proba(self, Xi, Xv, video_feature, audio_feature, title_feature, title_value):
         Xi = np.array(Xi).reshape((-1, self.field_size, 1))
         Xi = Variable(torch.LongTensor(Xi))
         Xv = Variable(torch.FloatTensor(Xv))
 
         video_feature = np.array(video_feature)
         video_feature = Variable(torch.FloatTensor(video_feature))
+
+        audio_feature = np.array(audio_feature)
+        audio_feature = Variable(torch.FloatTensor(audio_feature))
 
         title_feature = np.array(title_feature)
         title_feature = Variable(torch.LongTensor(title_feature))
@@ -695,12 +698,12 @@ class DeepFM(torch.nn.Module):
         title_value = Variable(torch.FloatTensor(title_value))
 
         if self.use_cuda:
-            Xi, Xv, video_feature, title_value, title_feature = \
-                Xi.cuda(), Xi.cuda(), video_feature.cuda(), \
+            Xi, Xv, video_feature, audio_feature, title_value, title_feature = \
+                Xi.cuda(), Xi.cuda(), video_feature.cuda(), audio_feature.cuda,\
                 title_value.cuda(), title_feature.cuda()
 
         model = self.eval()
-        pred = torch.sigmoid(model(Xi, Xv, video_feature, title_feature, title_value)).cpu()
+        pred = torch.sigmoid(model(Xi, Xv, video_feature, audio_feature, title_feature, title_value)).cpu()
         return pred.data.numpy()
 
     def inner_predict(self, Xi, Xv):

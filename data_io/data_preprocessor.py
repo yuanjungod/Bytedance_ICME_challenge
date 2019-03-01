@@ -28,7 +28,7 @@ class DataPreprocessor(object):
     def get_train_data(self):
         result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [], 'item_id': [],
                   "video": [], 'audio': [], 'feature_sizes': self.FEATURE_SIZES, 'tile_word_size': self.title_feature_tool.MAX_WORD}
-        step = 2000
+        step = 800
         for i in range(0, self.user_interactive_tool.get_max_id("ID"), step):
             print("data loading")
             users = self.user_interactive_tool.get(i, i+step)
@@ -100,11 +100,7 @@ class DataPreprocessor(object):
                 train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
                                 'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
                                 'tile_word_size': self.title_feature_tool.MAX_WORD}
-                # val_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
-                #               'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
-                #               'tile_word_size': self.title_feature_tool.MAX_WORD}
                 train_count = 0
-                # val_count = 0
 
 
 if __name__ == "__main__":
