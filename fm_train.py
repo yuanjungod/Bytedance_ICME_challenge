@@ -38,8 +38,8 @@ model.cuda(0)
 # train_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons"
 # train_dir = "/Volumes/Seagate Expansion Drive/byte/track2/jsons"
 
-# criterion = FocalLoss(2)
-criterion = nn.BCEWithLogitsLoss()
+criterion = FocalLoss(2)
+# criterion = nn.BCEWithLogitsLoss()
 # criterion = nn.BCELoss()
 # criterion = F.binary_cross_entropy_with_logits
 # F.cross_entropy()
