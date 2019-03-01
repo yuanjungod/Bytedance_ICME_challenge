@@ -486,8 +486,13 @@ class DeepFM(torch.nn.Module):
 
         if self.use_bert:
             bert_emb_size = deep_emb.size()
+            # size = embeddings.size()
+            label = torch.zeros(bert_emb_size[0], 1, dtype=torch.long)
+            if self.use_cuda:
+                label = label.cuda()
+
             bert_emb = deep_emb.view(bert_emb_size[0], -1, self.embedding_size)
-            bert_result = self.bert_model(bert_emb)
+            bert_result = self.bert_model(bert_emb, label)
 
         concat_input = fm_first_order
         # print(concat_input.size())
