@@ -576,8 +576,8 @@ class DeepFM(torch.nn.Module):
             outputs = model(batch_xi, batch_xv, batch_video_feature, batch_audio_feature, batch_title_feature, batch_title_value)
             # print("outputs size: ", outputs.size())
             like, finish = outputs
-            print("like", like.size())
-            print("batch_y_like_train", batch_y_like_train.size())
+            # print("like", like.size())
+            # print("batch_y_like_train", batch_y_like_train.size())
             like_loss = criterion(like, batch_y_like_train)
             finish_loss = criterion(finish, batch_y_finish_train)
             loss = like_loss + finish_loss
