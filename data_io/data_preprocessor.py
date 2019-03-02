@@ -92,7 +92,7 @@ class DataPreprocessor(object):
                 self.train_count += 1
             user_action, item_id, like, finish = json.loads(user)
             user_action.append(item_id)
-            result['item_id'].append(item_id % 200000)
+            result['item_id'].append(item_id % 500000)
             result['like'].append(like)
             result['finish'].append(finish)
             result['index'].append(user_action)
