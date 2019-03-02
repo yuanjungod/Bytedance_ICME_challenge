@@ -631,7 +631,7 @@ class DeepFM(torch.nn.Module):
                     print('val [%d] loss: %.6f metric: like-%.6f,finish-%.6f, learn rate: %s,  time: %.1f s' %
                           (count + 1, valid_loss, valid_eval[0], valid_eval[1], current_learn_rate,
                            time() - epoch_begin_time))
-                    log_json = {"status": "val", "count": count + 1, "loss": "%s" % valid_loss.dats,
+                    log_json = {"status": "val", "count": count + 1, "loss": "%s" % valid_loss.data,
                                 "like_auc": "%s" % valid_eval[0],
                                 "finish_auc": "%s" % valid_eval[1], "current_learn_rate": current_learn_rate,
                                 "time": time() - epoch_begin_time}
@@ -688,8 +688,8 @@ class DeepFM(torch.nn.Module):
             outputs = model(batch_xi, batch_xv, batch_video_feature, batch_audio_feature, batch_title_feature, batch_title_value)
             # print("outputs", outputs)
             like, finish = outputs
-            like_pred = F.softmax(like).cpu()
-            finish_pred = F.softmax(finish).cpu()
+            like_pred = F.softmax(like, dim=-1).cpu()
+            finish_pred = F.softmax(finish, dim=-1).cpu()
             # pred = torch.sigmoid(outputs).cpu()
             like_y_pred.append(like_pred.data.numpy())
             finish_y_pred.append(finish_pred.data.numpy())
