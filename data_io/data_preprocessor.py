@@ -60,7 +60,7 @@ class DataPreprocessor(object):
 
     def get_train_data_from_origin_file(self, video_path, title_path, interactive_file, audio_file_path):
         self.FIELD_SIZE = 10
-        self.FEATURE_SIZES = [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, 200000]
+        self.FEATURE_SIZES = [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, 500000]
         # self.FEATURE_SIZES = [80000, 400, 900000, 500, 5, 90000, 80000, 30, 20]
         # self.video_feature_tool.get_all_from_origin_file(video_path)
         if self.user_action_list is None:
@@ -92,7 +92,7 @@ class DataPreprocessor(object):
                 self.train_count += 1
             user_action, item_id, like, finish = json.loads(user)
             user_action.append(item_id)
-            result['item_id'].append(item_id % 200000)
+            result['item_id'].append(item_id % 500000)
             result['like'].append(like)
             result['finish'].append(finish)
             result['index'].append(user_action)
