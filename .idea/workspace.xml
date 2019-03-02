@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="36d2dfc8-d9e8-4c48-a768-99b96160d3dd" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/debug_fm_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/debug_fm_train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model_zoo/interest_pooling.py" beforeDir="false" afterPath="$PROJECT_DIR$/model_zoo/interest_pooling.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -36,11 +36,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model_zoo/interest_pooling.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="256">
-              <caret line="28" column="45" selection-start-line="28" selection-start-column="45" selection-end-line="28" selection-end-column="45" />
+            <state relative-caret-position="274">
+              <caret line="30" column="33" selection-start-line="30" selection-start-column="33" selection-end-line="30" selection-end-column="33" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
               </folding>
@@ -60,7 +60,7 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/debug_fm_train.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="264">
@@ -196,7 +196,6 @@
         <option value="$PROJECT_DIR$/model_zoo/din_xdeepfm.py" />
         <option value="$PROJECT_DIR$/fm_train2.py" />
         <option value="$PROJECT_DIR$/data_analy/face_feature.py" />
-        <option value="$PROJECT_DIR$/model_zoo/interest_pooling.py" />
         <option value="$PROJECT_DIR$/data_analy/video_feature.py" />
         <option value="$PROJECT_DIR$/data_analy/title_analy.py" />
         <option value="$PROJECT_DIR$/data_analy/audio_feature.py" />
@@ -210,12 +209,13 @@
         <option value="$PROJECT_DIR$/model_zoo/din_xdeep_bert.py" />
         <option value="$PROJECT_DIR$/fm_train.py" />
         <option value="$PROJECT_DIR$/debug_fm_train.py" />
+        <option value="$PROJECT_DIR$/model_zoo/interest_pooling.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="50" />
-    <option name="y" value="23" />
+    <option name="x" value="83" />
+    <option name="y" value="39" />
     <option name="width" value="1357" />
     <option name="height" value="831" />
   </component>
@@ -414,7 +414,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="50" y="23" width="1357" height="831" extended-state="0" />
+    <frame x="83" y="39" width="1357" height="831" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18937126" />
@@ -428,7 +428,7 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info anchor="bottom" id="Terminal" order="8" sideWeight="0.4989429" weight="0.33423546" />
+      <window_info anchor="bottom" id="Terminal" order="8" sideWeight="0.4989429" visible="true" weight="0.33423546" />
       <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.50149703" side_tool="true" weight="0.6982409" />
       <window_info anchor="bottom" id="Python Console" order="10" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
@@ -786,16 +786,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/model_zoo/interest_pooling.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="256">
-          <caret line="28" column="45" selection-start-line="28" selection-start-column="45" selection-end-line="28" selection-end-column="45" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/data_io/data_preprocessor.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1108">
@@ -822,6 +812,16 @@
           <caret line="33" column="13" lean-forward="true" selection-start-line="33" selection-start-column="13" selection-end-line="33" selection-end-column="13" />
           <folding>
             <element signature="e#0#54#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model_zoo/interest_pooling.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="274">
+          <caret line="30" column="33" selection-start-line="30" selection-start-column="33" selection-end-line="30" selection-end-column="33" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
           </folding>
         </state>
       </provider>
