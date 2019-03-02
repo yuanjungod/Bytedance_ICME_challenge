@@ -596,52 +596,55 @@ class DeepFM(torch.nn.Module):
                 if self.total_count % 100 == 0:  # print every 100 mini-batches
                     # eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_audio_feature,
                     # batch_title_feature, batch_title_value, batch_y_like_train, batch_y_finish_train)
-                    like_auc = self.eval_metric(batch_y_like_train.cpu().detach().numpy(), F.softmax(like, dim=-1).cpu().detach().numpy()[:, 1])
-                    finish_auc = self.eval_metric(batch_y_finish_train.cpu().detach().numpy(), F.softmax(finish, dim=-1).cpu().detach().numpy()[:, 1])
-                    print('****train***[%d, %5d] metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
-                          (count + 1, i + 1, like_auc, finish_auc, current_learn_rate,
-                           time() - batch_begin_time))
+                    try:
+                        like_auc = self.eval_metric(batch_y_like_train.cpu().detach().numpy(), F.softmax(like, dim=-1).cpu().detach().numpy()[:, 1])
+                        finish_auc = self.eval_metric(batch_y_finish_train.cpu().detach().numpy(), F.softmax(finish, dim=-1).cpu().detach().numpy()[:, 1])
+                        print('****train***[%d, %5d] metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
+                              (count + 1, i + 1, like_auc, finish_auc, current_learn_rate,
+                               time() - batch_begin_time))
 
-                    log_json = {"status": "train", "count": count + 1, "loss": "%s" % (total_loss/100), "like_auc": "%s" % like_auc,
-                                "finish_auc": "%s" % finish_auc, "current_learn_rate": current_learn_rate,
-                                "time": time() - epoch_begin_time}
-                    logger.info(json.dumps(log_json))
+                        log_json = {"status": "train", "count": count + 1, "loss": "%s" % (total_loss/100), "like_auc": "%s" % like_auc,
+                                    "finish_auc": "%s" % finish_auc, "current_learn_rate": current_learn_rate,
+                                    "time": time() - epoch_begin_time}
+                        logger.info(json.dumps(log_json))
+                    except:
+                        print("eval wrong!!!!!!")
 
                     total_loss = 0.0
                     batch_begin_time = time()
-
-                if Xi_valid is not None:
-                    Xi_valid = np.array(Xi_valid).reshape((-1, self.field_size, 1))
-                    Xv_valid = np.array(Xv_valid)
-
-                    title_feature_val = np.array(title_feature_val)
-                    # title_value_val = [[[j for _ in range(self.embedding_size)] for j in i] for i in title_value_val]
-                    title_value_val = np.array(title_value_val)
-                    video_feature_val = np.array(video_feature_val)
-                    audio_feature_val = np.array(audio_feature_val)
-                    y_like_valid = np.array(y_like_valid)
-                    y_finish_valid = np.array(y_finish_valid)
-                    y_valid = np.concatenate([y_like_valid.reshape(-1, 1), y_finish_valid.reshape(-1, 1)], 1)
-                    x_valid_size = Xi_valid.shape[0]
-                    valid_loss, valid_eval = self.eval_by_batch(
-                        Xi_valid, Xv_valid, y_like_valid, y_finish_valid, x_valid_size, video_feature_val,
-                        audio_feature_val,
-                        title_feature_val, title_value_val)
-                    # valid_result.append(valid_eval)
-                    print('valid*' * 20)
-                    print('val [%d] loss: %.6f metric: like-%.6f,finish-%.6f, learn rate: %s,  time: %.1f s' %
-                          (count + 1, valid_loss, valid_eval[0], valid_eval[1], current_learn_rate,
-                           time() - epoch_begin_time))
-                    log_json = {"status": "val", "count": count + 1, "loss": "%s" % valid_loss.data,
-                                "like_auc": "%s" % valid_eval[0],
-                                "finish_auc": "%s" % valid_eval[1], "current_learn_rate": current_learn_rate,
-                                "time": time() - epoch_begin_time}
-                    logger.info(json.dumps(log_json))
-                    print('valid*' * 20)
             # if self.total_count % 100 == 0:
             #     print("total count", self.total_count)
             if save_path and self.total_count % 5000 == 0:
                 torch.save(self.state_dict(), os.path.join(save_path, "byte_%s.model" % self.total_count))
+
+        if Xi_valid is not None:
+            Xi_valid = np.array(Xi_valid).reshape((-1, self.field_size, 1))
+            Xv_valid = np.array(Xv_valid)
+
+            title_feature_val = np.array(title_feature_val)
+            # title_value_val = [[[j for _ in range(self.embedding_size)] for j in i] for i in title_value_val]
+            title_value_val = np.array(title_value_val)
+            video_feature_val = np.array(video_feature_val)
+            audio_feature_val = np.array(audio_feature_val)
+            y_like_valid = np.array(y_like_valid)
+            y_finish_valid = np.array(y_finish_valid)
+            y_valid = np.concatenate([y_like_valid.reshape(-1, 1), y_finish_valid.reshape(-1, 1)], 1)
+            x_valid_size = Xi_valid.shape[0]
+            valid_loss, valid_eval = self.eval_by_batch(
+                Xi_valid, Xv_valid, y_like_valid, y_finish_valid, x_valid_size, video_feature_val,
+                audio_feature_val,
+                title_feature_val, title_value_val)
+            # valid_result.append(valid_eval)
+            print('valid*' * 20)
+            print('val [%d] loss: %.6f metric: like-%.6f,finish-%.6f, learn rate: %s,  time: %.1f s' %
+                  (count + 1, valid_loss, valid_eval[0], valid_eval[1], current_learn_rate,
+                   time() - epoch_begin_time))
+            log_json = {"status": "val", "count": count + 1, "loss": "%s" % valid_loss.data,
+                        "like_auc": "%s" % valid_eval[0],
+                        "finish_auc": "%s" % valid_eval[1], "current_learn_rate": current_learn_rate,
+                        "time": time() - epoch_begin_time}
+            logger.info(json.dumps(log_json))
+            print('valid*' * 20)
 
         # train_loss, train_eval = self.eval_by_batch(Xi_train, Xv_train, y_like_train, y_finish_train, x_size,
         #                                             video_feature, audio_feature, title_feature, title_value)
