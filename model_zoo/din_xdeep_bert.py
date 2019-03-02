@@ -333,7 +333,7 @@ class DeepFM(torch.nn.Module):
 
             # fm_second_order_emb_arr.append(video_feature)
             # fm_second_order_emb_arr.append(title_embedding)
-
+            print([i.size() for i in fm_second_order_emb_arr])
             fm_sum_second_order_emb = sum(fm_second_order_emb_arr)
             # print("sum", fm_sum_second_order_emb.size())
             # exit()
@@ -653,8 +653,6 @@ class DeepFM(torch.nn.Module):
         #             "time": time() - epoch_begin_time}
         # logger.info(json.dumps(log_json))
         # print('*' * 50)
-
-
 
     def eval_by_batch(self, Xi, Xv, like_y, finish_y, x_size, video_feature, audio_feature, title_feature, title_value):
         total_loss = 0.0
