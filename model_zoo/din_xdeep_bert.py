@@ -609,7 +609,7 @@ class DeepFM(torch.nn.Module):
                     total_loss = 0.0
                     batch_begin_time = time()
 
-                if Xi_valid:
+                if Xi_valid is not None:
                     Xi_valid = np.array(Xi_valid).reshape((-1, self.field_size, 1))
                     Xv_valid = np.array(Xv_valid)
 

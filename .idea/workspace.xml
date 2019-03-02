@@ -15,8 +15,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model_zoo/din_xdeep_bert.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="370">
-              <caret line="691" column="50" selection-start-line="691" selection-start-column="50" selection-end-line="691" selection-end-column="50" />
+            <state relative-caret-position="-91">
+              <caret line="613" column="49" lean-forward="true" selection-start-line="613" selection-start-column="49" selection-end-line="613" selection-end-column="49" />
               <folding>
                 <element signature="e#273#282#0" expanded="true" />
               </folding>
@@ -417,7 +417,7 @@
     <frame x="50" y="23" width="1357" height="831" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18937126" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18937126" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -818,8 +818,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/model_zoo/din_xdeep_bert.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="370">
-          <caret line="691" column="50" selection-start-line="691" selection-start-column="50" selection-end-line="691" selection-end-column="50" />
+        <state relative-caret-position="-91">
+          <caret line="613" column="49" lean-forward="true" selection-start-line="613" selection-start-column="49" selection-end-line="613" selection-end-column="49" />
           <folding>
             <element signature="e#273#282#0" expanded="true" />
           </folding>
