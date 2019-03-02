@@ -28,6 +28,7 @@ class InterestPooling1(torch.nn.Module):
         # Mask for paddings
         paddings = torch.ones(din_att.size()) * (-2 ** 32 + 1)
         if self.use_cuda:
+            print(paddings.size())
             paddings = paddings.cuda()
         # bags_Xi = bags_Xi.unsqueeze(dim=1)
         # print("bags_Xi", bags_Xi)
