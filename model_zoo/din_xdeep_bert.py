@@ -596,8 +596,8 @@ class DeepFM(torch.nn.Module):
                 if self.total_count % 100 == 0:  # print every 100 mini-batches
                     # eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_audio_feature,
                     # batch_title_feature, batch_title_value, batch_y_like_train, batch_y_finish_train)
-                    like_auc = self.eval_metric(batch_y_like_train.cpu().numpy(), F.softmax(like).cpu().numpy()[:, 1])
-                    finish_auc = self.eval_metric(batch_y_finish_train.cpu().numpy(), F.softmax(finish).cpu().numpy()[:, 1])
+                    like_auc = self.eval_metric(batch_y_like_train.detach().numpy(), F.softmax(like).detach().numpy()[:, 1])
+                    finish_auc = self.eval_metric(batch_y_finish_train.detach().numpy(), F.softmax(finish).detach().numpy()[:, 1])
                     print('****train***[%d, %5d] metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
                           (count + 1, i + 1, like_auc, finish_auc, current_learn_rate,
                            time() - batch_begin_time))
