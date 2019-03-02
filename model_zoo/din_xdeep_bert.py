@@ -596,13 +596,13 @@ class DeepFM(torch.nn.Module):
                 if self.total_count % 100 == 0:  # print every 100 mini-batches
                     # eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_audio_feature,
                     # batch_title_feature, batch_title_value, batch_y_like_train, batch_y_finish_train)
-                    like_auc = self.eval_metric(batch_y_like_train.cpu().detach().numpy(), F.softmax(like).cpu().detach().numpy()[:, 1])
-                    finish_auc = self.eval_metric(batch_y_finish_train.cpu().detach().numpy(), F.softmax(finish).cpu().detach().numpy()[:, 1])
+                    like_auc = self.eval_metric(batch_y_like_train.cpu().detach().numpy(), F.softmax(like, dim=-1).cpu().detach().numpy()[:, 1])
+                    finish_auc = self.eval_metric(batch_y_finish_train.cpu().detach().numpy(), F.softmax(finish, dim=-1).cpu().detach().numpy()[:, 1])
                     print('****train***[%d, %5d] metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
                           (count + 1, i + 1, like_auc, finish_auc, current_learn_rate,
                            time() - batch_begin_time))
 
-                    log_json = {"status": "train", "count": count + 1, "loss": "%s" % total_loss/100, "like_auc": "%s" % like_auc,
+                    log_json = {"status": "train", "count": count + 1, "loss": "%s" % (total_loss/100), "like_auc": "%s" % like_auc,
                                 "finish_auc": "%s" % finish_auc, "current_learn_rate": current_learn_rate,
                                 "time": time() - epoch_begin_time}
                     logger.info(json.dumps(log_json))
