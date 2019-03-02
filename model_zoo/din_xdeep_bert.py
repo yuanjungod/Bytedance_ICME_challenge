@@ -333,7 +333,7 @@ class DeepFM(torch.nn.Module):
 
             # fm_second_order_emb_arr.append(video_feature)
             # fm_second_order_emb_arr.append(title_embedding)
-            print([i.size() for i in fm_second_order_emb_arr])
+            # print([i.size() for i in fm_second_order_emb_arr])
             fm_sum_second_order_emb = sum(fm_second_order_emb_arr)
             # print("sum", fm_sum_second_order_emb.size())
             # exit()
@@ -596,8 +596,8 @@ class DeepFM(torch.nn.Module):
                 if self.total_count % 100 == 0:  # print every 100 mini-batches
                     # eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_audio_feature,
                     # batch_title_feature, batch_title_value, batch_y_like_train, batch_y_finish_train)
-                    like_auc = self.eval_metric(batch_y_like_train.detach().numpy(), F.softmax(like).detach().numpy()[:, 1])
-                    finish_auc = self.eval_metric(batch_y_finish_train.detach().numpy(), F.softmax(finish).detach().numpy()[:, 1])
+                    like_auc = self.eval_metric(batch_y_like_train.cpu().detach().numpy(), F.softmax(like).cpu().detach().numpy()[:, 1])
+                    finish_auc = self.eval_metric(batch_y_finish_train.cpu().detach().numpy(), F.softmax(finish).cpu().detach().numpy()[:, 1])
                     print('****train***[%d, %5d] metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
                           (count + 1, i + 1, like_auc, finish_auc, current_learn_rate,
                            time() - batch_begin_time))
