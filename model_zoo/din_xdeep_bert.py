@@ -593,7 +593,7 @@ class DeepFM(torch.nn.Module):
             # print(loss)
             total_loss += loss.data
             if self.verbose:
-                if self.total_count % 100 == 0:  # print every 100 mini-batches
+                if self.total_count % 1000 == 0:  # print every 100 mini-batches
                     # eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_audio_feature,
                     # batch_title_feature, batch_title_value, batch_y_like_train, batch_y_finish_train)
                     try:
