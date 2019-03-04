@@ -32,7 +32,7 @@ def submit():
 
         print("audio", result["audio"][0], type(result["audio"][0]))
 
-        step = 512
+        step = 256
         for i in range(0, len(result["index"]), step):
             like_preb, finish_preb = deep_fm.predict_proba(
                 result["index"][i: i+step], result["value"][i: i+step], result["video"][i: i+step],
