@@ -41,7 +41,8 @@ deep_fm = DeepFM(10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20,
     train model
 """
 model = deep_fm.train()
-model_path = '/Volumes/Seagate Expansion Drive/byte/track2/models/20190304/byte_305000.model'
+# model_path = '/Volumes/Seagate Expansion Drive/byte/track2/models/20190304/byte_305000.model'
+model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/20190304/byte_305000.model'
 deep_fm.load_state_dict(torch.load(model_path, map_location='cpu'))
 # model.cuda(0)
 
