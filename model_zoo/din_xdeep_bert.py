@@ -319,8 +319,8 @@ class DeepFM(torch.nn.Module):
             #                           enumerate(self.fm_first_order_embeddings)]
             fm_first_order_emb_arr = list()
             for i, emb in enumerate(self.fm_first_order_embeddings):
-                print(Xi[:, i, :], emb)
-                print(Xi[:, i, :].size(), emb, torch.sum(emb(Xi[:, i, :]), 1).t(), Xv[:, i])
+                # print(Xi[:, i, :], emb)
+                print(Xi[:, i, :].size(), emb, torch.sum(emb(Xi[:, i, :]), 1).t())
                 fm_first_order_emb_arr.append((torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t())
             print([i.size() for i in fm_first_order_emb_arr])
             fm_first_order = torch.cat(fm_first_order_emb_arr, 1)
