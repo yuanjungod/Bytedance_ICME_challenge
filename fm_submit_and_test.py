@@ -20,8 +20,8 @@ def submit():
     # deep_fm.load_state_dict(torch.load(model_path, map_location='cpu'))
     deep_fm.load_state_dict(torch.load(model_path))
     deep_fm.cuda(0)
-    # submit_path_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/submit_jsons/"
-    submit_path_dir = "/Volumes/Seagate Expansion Drive/byte/track2/submit_jsons"
+    submit_path_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/submit_jsons/"
+    # submit_path_dir = "/Volumes/Seagate Expansion Drive/byte/track2/submit_jsons"
     submit_files = [os.path.join(submit_path_dir, i) for i in os.listdir(submit_path_dir)]
 
     for file in submit_files:
