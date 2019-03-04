@@ -115,6 +115,39 @@ class DataPreprocessor(object):
                                      'tile_word_size': self.title_feature_tool.MAX_WORD}
                 self.train_count = 0
 
+    def get_train_data_from_origin_file2(self, video_path, title_path, interactive_file, audio_file_path):
+        self.video_feature_tool.get_all_from_json_file([
+            "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_video_features_%s.json" % i for i in range(21)])
+        print("video init finish")
+        self.audio_feature_tool.get_all_from_json_file([
+            "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_audio_features_%s.json" % i for i in range(8)
+        ])
+        print("audio init finish")
+        self.title_feature_tool.get_all_from_origin_file(title_path)
+        print("title init finish")
+        # user_action_list = self.user_interactive_tool.get_all_from_origin_file(interactive_file)
+        self.user_action_list = self.user_interactive_tool.get_all_from_json_file(
+            "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_no_anwser.json")
+
+        result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [], 'item_id': [],
+                  "video": [], 'audio': [], 'feature_sizes': self.FEATURE_SIZES,
+                  'tile_word_size': self.title_feature_tool.MAX_WORD}
+
+        for user in self.user_action_list:
+            user_action, item_id, like, finish = json.loads(user)
+            user_action.append(item_id % 500000)
+            result['item_id'].append(item_id)
+            result['like'].append(like)
+            result['finish'].append(finish)
+            result['index'].append(user_action)
+            result['value'].append([1 for _ in user_action])
+            title_list = json.loads(self.title_feature_tool.get(item_id))
+            result['title'].append([int(title_list[i]) if i < len(title_list) else 0 for i in range(30)])
+            result['title_value'].append([1 if i < len(title_list) else 0 for i in range(30)])
+            result['video'].append(json.loads(self.video_feature_tool.get(item_id)))
+            result['audio'].append(json.loads(self.audio_feature_tool.get(item_id)))
+        return result
+
 
 if __name__ == "__main__":
     video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
@@ -124,10 +157,16 @@ if __name__ == "__main__":
     # video_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/video.db"
     # title_feature_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/title.db"
     # user_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/user_test.db"
-    count = 0
-    for i in DataPreprocessor(video_db_path, user_db_path, title_feature_path, audio_feature_path).get_train_data():
-        # fp = open("/home/yuanjun/code/Bytedance_ICME_challenge/track2/submit_jsons/%s.json" % count, 'w')
-        fp = open("/Volumes/Seagate Expansion Drive/byte/track2/submit_jsons/%s.json" % count, 'w')
-        json.dump(i, fp)
-        fp.close()
-        count += 1
+    # count = 0
+    # for i in DataPreprocessor(video_db_path, user_db_path, title_feature_path, audio_feature_path).get_train_data():
+    #     # fp = open("/home/yuanjun/code/Bytedance_ICME_challenge/track2/submit_jsons/%s.json" % count, 'w')
+    #     fp = open("/Volumes/Seagate Expansion Drive/byte/track2/submit_jsons/%s.json" % count, 'w')
+    #     json.dump(i, fp)
+    #     fp.close()
+    #     count += 1
+    result = DataPreprocessor(video_db_path, user_db_path, title_feature_path, audio_feature_path).get_train_data_from_origin_file2(
+        None, "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_title.txt", None, None)
+    fp = open("/home/yuanjun/code/Bytedance_ICME_challenge/track2/submit_jsons/result.json", 'w')
+    json.dump(result, fp)
+    fp.close()
+
