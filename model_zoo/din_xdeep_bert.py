@@ -782,7 +782,7 @@ class DeepFM(torch.nn.Module):
         like, finish = outputs
         like_preb = F.softmax(like, dim=-1)
         finish_preb = F.softmax(finish, dim=-1)
-        return like_preb.cuda().numpy(), finish_preb.cuda().numpy()
+        return like_preb.cpu().detach().numpy(), finish_preb.cpu().detach().numpy()
 
     def inner_predict(self, Xi, Xv):
         """
