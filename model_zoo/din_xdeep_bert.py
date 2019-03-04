@@ -588,7 +588,7 @@ class DeepFM(torch.nn.Module):
             # print("batch_y_like_train", batch_y_like_train.size())
             like_loss = criterion(like, batch_y_like_train)
             finish_loss = criterion(finish, batch_y_finish_train)
-            loss = 2*like_loss + finish_loss
+            loss = like_loss + finish_loss
             loss.backward()
 
             for param_group in optimizer.param_groups:

@@ -16,7 +16,7 @@ from common.logger import logger
 # title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 deep_fm = DeepFM(10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, 500000], 128, 128,
-                 embedding_size=128, learning_rate=0.0001, use_bert=True, num_attention_heads=8,
+                 embedding_size=128, learning_rate=0.0001, use_bert=False, num_attention_heads=8,
                  batch_size=256, deep_layers_activation='sigmoid')
 # exit()
 
@@ -24,8 +24,8 @@ deep_fm = DeepFM(10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20,
     train model
 """
 model = deep_fm.train()
-model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/20190304/byte_305000.model'
-deep_fm.load_state_dict(torch.load(model_path))
+# model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/20190304/byte_305000.model'
+# deep_fm.load_state_dict(torch.load(model_path))
 model.cuda(0)
 # test_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/val_jsons"
 # test_dir = "/Volumes/Seagate Expansion Drive/byte/track2/val_jsons"
@@ -34,7 +34,7 @@ model.cuda(0)
 # train_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons"
 # train_dir = "/Volumes/Seagate Expansion Drive/byte/track2/jsons"
 
-criterion = FocalLoss(3)
+criterion = FocalLoss(2)
 # criterion = nn.BCEWithLogitsLoss()
 # criterion = nn.BCELoss()
 # criterion = F.binary_cross_entropy_with_logits
