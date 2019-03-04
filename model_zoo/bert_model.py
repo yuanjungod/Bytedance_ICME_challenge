@@ -351,7 +351,7 @@ class BertPreTrainedModel(nn.Module):
 
 class BertModel(BertPreTrainedModel):
 
-    def __init__(self, config):
+    def __init__(self, config, use_cuda=False):
         super(BertModel, self).__init__(config)
         self.encoder = BertEncoder(config)
         # self.like_pooler = BertPooler(config, 0)
@@ -361,6 +361,7 @@ class BertModel(BertPreTrainedModel):
         self.finish_class_label = nn.Linear(config.hidden_size, 1)
         self.class_embedding = nn.Embedding(2, config.hidden_size)
         self.apply(self.init_bert_weights)
+        self.use_cuda = use_cuda
 
     def forward(self, embeddings, label, attention_mask=None, output_all_encoded_layers=False):
         # print("embeddings", embeddings.size())
@@ -384,7 +385,9 @@ class BertModel(BertPreTrainedModel):
         extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
 
-        extended_attention_mask = extended_attention_mask.cuda()
+        if self.use_cuda:
+            extended_attention_mask = extended_attention_mask.cuda()
+
         encoded_layers = self.encoder(embeddings, extended_attention_mask, output_all_encoded_layers=output_all_encoded_layers)
         sequence_output = encoded_layers[-1]
         # like_pooled_output = self.like_pooler(sequence_output)
