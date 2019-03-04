@@ -637,21 +637,24 @@ class DeepFM(torch.nn.Module):
             y_finish_valid = np.array(y_finish_valid)
             y_valid = np.concatenate([y_like_valid.reshape(-1, 1), y_finish_valid.reshape(-1, 1)], 1)
             x_valid_size = Xi_valid.shape[0]
-            valid_loss, valid_eval = self.eval_by_batch(
-                Xi_valid, Xv_valid, y_like_valid, y_finish_valid, x_valid_size, video_feature_val,
-                audio_feature_val,
-                title_feature_val, title_value_val)
-            # valid_result.append(valid_eval)
-            print('valid*' * 20)
-            print('val [%d] loss: %.6f metric: like-%.6f,finish-%.6f, learn rate: %s,  time: %.1f s' %
-                  (count + 1, valid_loss, valid_eval[0], valid_eval[1], current_learn_rate,
-                   time() - epoch_begin_time))
-            log_json = {"status": "val", "count": count + 1, "loss": "%s" % valid_loss.data,
-                        "like_auc": "%s" % valid_eval[0],
-                        "finish_auc": "%s" % valid_eval[1], "current_learn_rate": current_learn_rate,
-                        "time": time() - epoch_begin_time}
-            logger.info(json.dumps(log_json))
-            print('valid*' * 20)
+            try:
+                valid_loss, valid_eval = self.eval_by_batch(
+                    Xi_valid, Xv_valid, y_like_valid, y_finish_valid, x_valid_size, video_feature_val,
+                    audio_feature_val,
+                    title_feature_val, title_value_val)
+                # valid_result.append(valid_eval)
+                print('valid*' * 20)
+                print('val [%d] loss: %.6f metric: like-%.6f,finish-%.6f, learn rate: %s,  time: %.1f s' %
+                      (count + 1, valid_loss, valid_eval[0], valid_eval[1], current_learn_rate,
+                       time() - epoch_begin_time))
+                log_json = {"status": "val", "count": count + 1, "loss": "%s" % valid_loss.data,
+                            "like_auc": "%s" % valid_eval[0],
+                            "finish_auc": "%s" % valid_eval[1], "current_learn_rate": current_learn_rate,
+                            "time": time() - epoch_begin_time}
+                logger.info(json.dumps(log_json))
+                print('valid*' * 20)
+            except:
+                print("eval wrong!!!!!!")
 
         # train_loss, train_eval = self.eval_by_batch(Xi_train, Xv_train, y_like_train, y_finish_train, x_size,
         #                                             video_feature, audio_feature, title_feature, title_value)

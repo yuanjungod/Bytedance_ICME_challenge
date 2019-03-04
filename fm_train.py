@@ -1,14 +1,8 @@
 from data_io.data_preprocessor import DataPreprocessor
 from model_zoo.din_xdeep_bert import DeepFM
 import torch
-import torch.nn as nn
 import time
-import os
-import json
 from model_zoo.focal_loss import FocalLoss
-import random
-import logging
-from utils.utils import rand_train_data
 from common.logger import logger
 
 
