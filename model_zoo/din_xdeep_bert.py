@@ -315,14 +315,14 @@ class DeepFM(torch.nn.Module):
             # print("test", Xi[:, 0, :])
             # exit()
 
-            # fm_first_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
-            #                           enumerate(self.fm_first_order_embeddings)]
-            fm_first_order_emb_arr = list()
-            for i, emb in enumerate(self.fm_first_order_embeddings):
-                # print(Xi[:, i, :], emb)
-                print(Xi[:, i, :].size(), emb, torch.sum(emb(Xi[:, i, :]), 1).t())
-                fm_first_order_emb_arr.append((torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t())
-            print([i.size() for i in fm_first_order_emb_arr])
+            fm_first_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
+                                      enumerate(self.fm_first_order_embeddings)]
+            # fm_first_order_emb_arr = list()
+            # for i, emb in enumerate(self.fm_first_order_embeddings):
+            #     # print(Xi[:, i, :], emb)
+            #     print(Xi[:, i, :].size(), emb, torch.sum(emb(Xi[:, i, :]), 1).t())
+            #     fm_first_order_emb_arr.append((torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t())
+            # print([i.size() for i in fm_first_order_emb_arr])
             fm_first_order = torch.cat(fm_first_order_emb_arr, 1)
             if self.is_shallow_dropout:
                 fm_first_order = self.fm_first_order_dropout(fm_first_order)
@@ -767,7 +767,7 @@ class DeepFM(torch.nn.Module):
 
         if self.use_cuda:
             Xi, Xv, video_feature, audio_feature, title_value, title_feature = \
-                Xi.cuda(), Xi.cuda(), video_feature.cuda(), audio_feature.cuda,\
+                Xi.cuda(), Xv.cuda(), video_feature.cuda(), audio_feature.cuda,\
                 title_value.cuda(), title_feature.cuda()
 
         model = self.eval()
