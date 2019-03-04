@@ -30,6 +30,8 @@ def submit():
         result = json.load(fp)
         fp.close()
 
+        print("audio", result["audio"][0], type(result["audio"][0]))
+
         step = 512
         for i in range(0, len(result["index"]), step):
             like_preb, finish_preb = deep_fm.predict_proba(
