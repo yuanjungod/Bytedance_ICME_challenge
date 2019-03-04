@@ -30,8 +30,8 @@ def submit():
         result = json.load(fp)
         fp.close()
 
-        print("audio", result["audio"][0], type(result["audio"][0]))
-        print("video", result["video"][0], type(result["video"][0]))
+        # print("audio", result["audio"][0], type(result["audio"][0]))
+        # print("video", result["video"][0], type(result["video"][0]))
 
         step = 256
         for i in range(0, len(result["index"]), step):
