@@ -66,7 +66,7 @@ else:
     interactive_file = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.txt"
     audio_file_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_audio_features.txt"
     data_prepro_tool = DataPreprocessor(video_path, interactive_file, title_path, audio_file_path)
-    result_list = data_prepro_tool.get_train_data_from_origin_file(video_path, title_path, interactive_file, audio_file_path)
+    result_list = data_prepro_tool.get_train_data_from_origin_file(video_path, title_path, interactive_file, audio_file_path, 256)
 
 
 like_preb_list = list()
@@ -75,7 +75,8 @@ like_list = list()
 finish_list = list()
 total_count = 0
 
-for result in result_list:
+for train_result, val_result in result_list:
+    result = train_result
     total_count += len(result["index"])
     like_preb, finish_preb = deep_fm.predict_proba(
         result["index"], result["value"], result["video"], result['audio'],  result["title"], result["title_value"])
