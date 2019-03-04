@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="36d2dfc8-d9e8-4c48-a768-99b96160d3dd" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/fm_submit_and_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/fm_submit_and_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model_zoo/din_xdeep_bert.py" beforeDir="false" afterPath="$PROJECT_DIR$/model_zoo/din_xdeep_bert.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -12,11 +12,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model_zoo/din_xdeep_bert.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="394">
-              <caret line="770" column="56" lean-forward="true" selection-start-line="770" selection-start-column="56" selection-end-line="770" selection-end-column="56" />
+            <state relative-caret-position="182">
+              <caret line="394" column="64" lean-forward="true" selection-start-line="394" selection-start-column="64" selection-end-line="394" selection-end-column="64" />
               <folding>
                 <element signature="e#273#282#0" expanded="true" />
               </folding>
@@ -117,11 +117,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fm_submit_and_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="248">
-              <caret line="34" column="18" selection-start-line="34" selection-start-column="18" selection-end-line="34" selection-end-column="18" />
+            <state relative-caret-position="47">
+              <caret line="8" column="16" selection-start-line="8" selection-start-column="10" selection-end-line="8" selection-end-column="16" />
               <folding>
                 <element signature="e#0#43#0" expanded="true" />
               </folding>
@@ -140,7 +140,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>Please load data</find>
       <find>Please</find>
       <find>load data</find>
       <find>user consume</find>
@@ -170,6 +169,7 @@
       <find>soft</find>
       <find>eval</find>
       <find>concatenate</find>
+      <find>batch_size</find>
     </findStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$/data_analy</dir>
@@ -209,8 +209,8 @@
         <option value="$PROJECT_DIR$/data_analy/user_interactive.py" />
         <option value="$PROJECT_DIR$/data_io/data_preprocessor.py" />
         <option value="$PROJECT_DIR$/eval.py" />
-        <option value="$PROJECT_DIR$/model_zoo/din_xdeep_bert.py" />
         <option value="$PROJECT_DIR$/fm_submit_and_test.py" />
+        <option value="$PROJECT_DIR$/model_zoo/din_xdeep_bert.py" />
       </list>
     </option>
   </component>
@@ -807,22 +807,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/model_zoo/din_xdeep_bert.py">
+    <entry file="file://$PROJECT_DIR$/fm_submit_and_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="394">
-          <caret line="770" column="56" lean-forward="true" selection-start-line="770" selection-start-column="56" selection-end-line="770" selection-end-column="56" />
+        <state relative-caret-position="47">
+          <caret line="8" column="16" selection-start-line="8" selection-start-column="10" selection-end-line="8" selection-end-column="16" />
           <folding>
-            <element signature="e#273#282#0" expanded="true" />
+            <element signature="e#0#43#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fm_submit_and_test.py">
+    <entry file="file://$PROJECT_DIR$/model_zoo/din_xdeep_bert.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="248">
-          <caret line="34" column="18" selection-start-line="34" selection-start-column="18" selection-end-line="34" selection-end-column="18" />
+        <state relative-caret-position="182">
+          <caret line="394" column="64" lean-forward="true" selection-start-line="394" selection-start-column="64" selection-end-line="394" selection-end-column="64" />
           <folding>
-            <element signature="e#0#43#0" expanded="true" />
+            <element signature="e#273#282#0" expanded="true" />
           </folding>
         </state>
       </provider>
