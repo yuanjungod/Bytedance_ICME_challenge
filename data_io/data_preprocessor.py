@@ -36,13 +36,15 @@ class DataPreprocessor(object):
 
     def get_train_data(self):
         result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [], 'item_id': [],
-                  "video": [], 'audio': [], 'feature_sizes': self.FEATURE_SIZES, 'tile_word_size': self.title_feature_tool.MAX_WORD}
-        step = 800
+                  "video": [], 'audio': [], 'feature_sizes': self.FEATURE_SIZES,
+                  'tile_word_size': self.title_feature_tool.MAX_WORD}
+        step = 10000
         for i in range(0, self.user_interactive_tool.get_max_id("ID"), step):
             print("data loading")
             users = self.user_interactive_tool.get(i, i+step)
             for user in users:
                 user_action, item_id, like, finish = user
+                user_action.append(item_id % 500000)
                 result['item_id'].append(item_id)
                 result['like'].append(like)
                 result['finish'].append(finish)
@@ -111,15 +113,17 @@ class DataPreprocessor(object):
 
 
 if __name__ == "__main__":
-    # video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
-    # title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
-    # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
-    video_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/video.db"
-    title_feature_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/title.db"
-    user_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/user_test.db"
+    video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
+    title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
+    user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user_test.db"
+    audio_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/audio.db"
+    # video_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/video.db"
+    # title_feature_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/title.db"
+    # user_db_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/user_test.db"
     count = 0
-    for i in DataPreprocessor(video_db_path, user_db_path, title_feature_path).get_train_data():
-        fp = open("/home/yuanjun/code/Bytedance_ICME_challenge/track2/submit_jsons/%s.json" % count, 'w')
+    for i in DataPreprocessor(video_db_path, user_db_path, title_feature_path, audio_feature_path).get_train_data():
+        # fp = open("/home/yuanjun/code/Bytedance_ICME_challenge/track2/submit_jsons/%s.json" % count, 'w')
+        fp = open("/Volumes/Seagate Expansion Drive/byte/track2/submit_jsons/%s.json" % count, 'w')
         json.dump(i, fp)
         fp.close()
         count += 1

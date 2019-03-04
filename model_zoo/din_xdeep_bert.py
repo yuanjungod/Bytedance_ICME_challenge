@@ -265,7 +265,7 @@ class DeepFM(torch.nn.Module):
             logger.info("Init bert part")
             self.config = BertConfig(hidden_size=embedding_size,
                                      num_attention_heads=num_attention_heads, intermediate_size=embedding_size*4)
-            self.bert_model = BertModel(self.config)
+            self.bert_model = BertModel(self.config, self.use_cuda)
             logger.info("Init bert part succeed")
         """
             linear_layer
@@ -761,7 +761,7 @@ class DeepFM(torch.nn.Module):
         title_feature = np.array(title_feature)
         title_feature = Variable(torch.LongTensor(title_feature))
 
-        title_value = [[[j for _ in range(self.embedding_size)] for j in i] for i in title_value]
+        # title_value = [[[j for _ in range(self.embedding_size)] for j in i] for i in title_value]
         title_value = np.array(title_value)
         title_value = Variable(torch.FloatTensor(title_value))
 
@@ -771,8 +771,11 @@ class DeepFM(torch.nn.Module):
                 title_value.cuda(), title_feature.cuda()
 
         model = self.eval()
-        pred = torch.sigmoid(model(Xi, Xv, video_feature, audio_feature, title_feature, title_value)).cpu()
-        return pred.data.numpy()
+        outputs = model(Xi, Xv, video_feature, audio_feature, title_feature, title_value)
+        like, finish = outputs
+        like_preb = F.softmax(like, dim=-1)
+        finish_preb = F.softmax(finish, dim=-1)
+        return like_preb.data.numpy(), finish_preb.data.numpy()
 
     def inner_predict(self, Xi, Xv):
         """

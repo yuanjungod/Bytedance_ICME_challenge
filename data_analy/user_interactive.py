@@ -168,7 +168,7 @@ class UserInteractiveTool(object):
 
     def get(self, record_id_1, record_id_2):
         start = time.time()
-        sql = "SELECT * FROM USER WHERE id>=%s and id < %s" % (record_id_1, record_id_2)
+        sql = "SELECT * FROM USER_TEST WHERE id>=%s and id < %s" % (record_id_1, record_id_2)
         result = list()
         cursor = self.cursor.execute(sql)
         # print("user consume", time.time() - start)
@@ -190,7 +190,7 @@ class UserInteractiveTool(object):
 
     def get_max_id(self, name):
         start = time.time()
-        sql = "SELECT max(%s) FROM USER" % name
+        sql = "SELECT max(%s) FROM USER_TEST" % name
         result = list()
         cursor = self.cursor.execute(sql)
         for row in cursor:
@@ -222,11 +222,11 @@ if __name__ == "__main__":
     # for i in ["ID", "UID", "USER_CITY", "ITEM_ID", "AUTHOR_ID", "ITEM_CITY", "CHANNEL", "FINISH", "LIKE", "MUSIC_ID",
     #           "DEVICE_ID", "CREATE_TIME", "VIDEO_DURATION"]:
     #     interactive_tool.get_max_id(i)
-    user_interactivate_list = interactive_tool.get_all_from_origin_file(
-        "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.txt")
-    f = open("/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.json", "w")
-    json.dump(user_interactivate_list, f)
-    f.close()
+    # user_interactivate_list = interactive_tool.get_all_from_origin_file(
+    #     "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.txt")
+    # f = open("/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.json", "w")
+    # json.dump(user_interactivate_list, f)
+    # f.close()
     # interactive_tool.get_all_from_json_file("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.json")
     # print(len(interactive_tool.user_interactivate_list))
     # time.sleep(100)
