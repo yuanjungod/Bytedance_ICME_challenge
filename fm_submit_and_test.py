@@ -53,11 +53,12 @@ submit()
 
 
 for item in result_list:
-    result_dict["uid"].append(item[0])
+    result_dict["uid"].append(item[0]-1)
     result_dict["item_id"].append(item[1])
-    result_dict["finish_probability"].append(item[2])
-    result_dict["like_probability"].append(item[3])
-pandas.DataFrame(result_dict).to_csv("result.csv")
+    result_dict["like_probability"].append(item[2])
+    result_dict["finish_probability"].append(item[3])
+
+pandas.DataFrame(result_dict).to_csv("result.csv", index=False)
 
 
 
