@@ -15,8 +15,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model_zoo/din_xdeep_bert.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="182">
-              <caret line="394" column="64" lean-forward="true" selection-start-line="394" selection-start-column="64" selection-end-line="394" selection-end-column="64" />
+            <state relative-caret-position="234">
+              <caret line="758" column="49" lean-forward="true" selection-start-line="758" selection-start-column="49" selection-end-line="758" selection-end-column="49" />
               <folding>
                 <element signature="e#273#282#0" expanded="true" />
               </folding>
@@ -120,8 +120,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fm_submit_and_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="47">
-              <caret line="8" column="16" selection-start-line="8" selection-start-column="10" selection-end-line="8" selection-end-column="16" />
+            <state relative-caret-position="133">
+              <caret line="9" column="31" selection-start-line="9" selection-start-column="27" selection-end-line="9" selection-end-column="31" />
               <folding>
                 <element signature="e#0#43#0" expanded="true" />
               </folding>
@@ -140,8 +140,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>Please</find>
-      <find>load data</find>
       <find>user consume</find>
       <find>din_att3</find>
       <find>y_pred</find>
@@ -151,7 +149,6 @@
       <find>total count</find>
       <find>.hidden_size</find>
       <find>BertIntermediate</find>
-      <find>size</find>
       <find>BertSelfAttention</find>
       <find>intermediate_size</find>
       <find>BertPooler</find>
@@ -170,6 +167,9 @@
       <find>eval</find>
       <find>concatenate</find>
       <find>batch_size</find>
+      <find>.size</find>
+      <find>size</find>
+      <find>audio_feature</find>
     </findStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$/data_analy</dir>
@@ -809,8 +809,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/fm_submit_and_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="47">
-          <caret line="8" column="16" selection-start-line="8" selection-start-column="10" selection-end-line="8" selection-end-column="16" />
+        <state relative-caret-position="133">
+          <caret line="9" column="31" selection-start-line="9" selection-start-column="27" selection-end-line="9" selection-end-column="31" />
           <folding>
             <element signature="e#0#43#0" expanded="true" />
           </folding>
@@ -819,8 +819,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/model_zoo/din_xdeep_bert.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="182">
-          <caret line="394" column="64" lean-forward="true" selection-start-line="394" selection-start-column="64" selection-end-line="394" selection-end-column="64" />
+        <state relative-caret-position="234">
+          <caret line="758" column="49" lean-forward="true" selection-start-line="758" selection-start-column="49" selection-end-line="758" selection-end-column="49" />
           <folding>
             <element signature="e#273#282#0" expanded="true" />
           </folding>

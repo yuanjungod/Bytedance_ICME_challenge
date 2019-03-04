@@ -392,7 +392,7 @@ class DeepFM(torch.nn.Module):
                 deep_emb = torch.cat([deep_emb, video_feature], 1)
 
             if audio_feature is not None:
-                print(audio_feature.size(), type[audio_feature])
+                # print(audio_feature.size(), type(audio_feature))
                 audio_feature = self.audio_line(audio_feature)
                 audio_feature = activation(audio_feature)
                 deep_emb = torch.cat([deep_emb, audio_feature], 1)
@@ -753,10 +753,10 @@ class DeepFM(torch.nn.Module):
         Xi = Variable(torch.LongTensor(Xi))
         Xv = Variable(torch.FloatTensor(Xv))
 
-        video_feature = np.array(video_feature)
+        # video_feature = np.array(video_feature)
         video_feature = Variable(torch.FloatTensor(video_feature))
 
-        audio_feature = np.array(audio_feature)
+        # audio_feature = np.array(audio_feature)
         audio_feature = Variable(torch.FloatTensor(audio_feature))
 
         title_feature = np.array(title_feature)
