@@ -385,6 +385,9 @@ class DeepFM(torch.nn.Module):
                 activation = F.relu
 
             if video_feature is not None:
+                print(type(video_feature))
+                print(video_feature.size())
+
                 video_feature = self.video_line(video_feature)
 
                 video_feature = activation(video_feature)
@@ -392,7 +395,8 @@ class DeepFM(torch.nn.Module):
                 deep_emb = torch.cat([deep_emb, video_feature], 1)
 
             if audio_feature is not None:
-                # print(audio_feature.size(), type(audio_feature))
+                print(type(audio_feature))
+                print(audio_feature.size())
                 audio_feature = self.audio_line(audio_feature)
                 audio_feature = activation(audio_feature)
                 deep_emb = torch.cat([deep_emb, audio_feature], 1)
