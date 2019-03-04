@@ -16,8 +16,9 @@ def submit():
     # model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/finish/20190223/byte_25000.model'
     model_path = '/Volumes/Seagate Expansion Drive/byte/track2/models/20190304/byte_295000.model'
 
-    deep_fm.load_state_dict(torch.load(model_path, map_location='cpu'))
-    # deep_fm.cuda(0)
+    # deep_fm.load_state_dict(torch.load(model_path, map_location='cpu'))
+    deep_fm.load_state_dict(torch.load(model_path))
+    deep_fm.cuda(0)
     # submit_path_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/submit_jsons/"
     submit_path_dir = "/Volumes/Seagate Expansion Drive/byte/track2/submit_jsons"
     submit_files = [os.path.join(submit_path_dir, i) for i in os.listdir(submit_path_dir)]

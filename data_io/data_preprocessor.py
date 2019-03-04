@@ -60,7 +60,7 @@ class DataPreprocessor(object):
                       "video": [], 'audio': [], 'feature_sizes': self.FEATURE_SIZES,
                       'tile_word_size': self.title_feature_tool.MAX_WORD}
 
-    def get_train_data_from_origin_file(self, video_path, title_path, interactive_file, audio_file_path):
+    def get_train_data_from_origin_file(self, video_path, title_path, interactive_file, audio_file_path, step=300000):
         self.FIELD_SIZE = 10
         self.FEATURE_SIZES = [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, 500000]
         # self.FEATURE_SIZES = [80000, 400, 900000, 500, 5, 90000, 80000, 30, 20]
@@ -108,7 +108,7 @@ class DataPreprocessor(object):
             result['title_value'].append([1 if i < len(title_list) else 0 for i in range(30)])
             result['video'].append(json.loads(self.video_feature_tool.get(item_id)))
             result['audio'].append(json.loads(self.audio_feature_tool.get(item_id)))
-            if self.train_count >= 300000:
+            if self.train_count >= step:
                 yield self.train_result, self.val_result
                 self.train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
                                      'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
