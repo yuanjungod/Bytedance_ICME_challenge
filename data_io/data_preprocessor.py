@@ -5,7 +5,7 @@ from data_analy.audio_feature import *
 import json
 import random
 
-random.seed(941)
+# random.seed(941)
 
 
 class DataPreprocessor(object):
@@ -33,13 +33,13 @@ class DataPreprocessor(object):
                            'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
                            'tile_word_size': self.title_feature_tool.MAX_WORD}
         self.val_count = 0
+        self.val_user_list = list()
 
-    def get_train_data(self):
+    def get_train_data(self, step=10000):
         result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [], 'item_id': [],
                   "video": [], 'audio': [], 'feature_sizes': self.FEATURE_SIZES,
                   'tile_word_size': self.title_feature_tool.MAX_WORD}
-        step = 10000
-        for i in range(0, self.user_interactive_tool.get_max_id("ID"), step):
+        for i in range(16000000, self.user_interactive_tool.get_max_id("ID"), step):
             print("data loading")
             users = self.user_interactive_tool.get(i, i+step)
             for user in users:
@@ -78,6 +78,7 @@ class DataPreprocessor(object):
             # user_action_list = self.user_interactive_tool.get_all_from_origin_file(interactive_file)
             self.user_action_list = self.user_interactive_tool.get_all_from_json_file(
                 "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.json")
+            random.shuffle(self.user_action_list)
             print("user action init finish")
         else:
             random.shuffle(self.user_action_list)
@@ -87,11 +88,14 @@ class DataPreprocessor(object):
 
         for user in self.user_action_list:
             if self.val_count < 300000 and random.random() > 0.998:
+                self.val_user_list.append(user)
                 result = self.val_result
                 self.val_count += 1
             else:
                 result = self.train_result
                 self.train_count += 1
+                if user in self.val_user_list:
+                    continue
             user_action, item_id, like, finish = json.loads(user)
             user_action.append(item_id % 500000)
             result['item_id'].append(item_id)
