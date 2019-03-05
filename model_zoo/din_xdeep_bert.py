@@ -636,7 +636,7 @@ class DeepFM(torch.nn.Module):
                     batch_begin_time = time()
             # if self.total_count % 100 == 0:
             #     print("total count", self.total_count)
-            if save_path and self.total_count % 5000 == 0:
+            if save_path and self.total_count % 8000 == 0:
                 torch.save(self.state_dict(), os.path.join(save_path, "byte_%s.model" % self.total_count))
 
         if Xi_valid is not None:
