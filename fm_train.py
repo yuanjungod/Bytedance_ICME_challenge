@@ -15,9 +15,13 @@ user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 deep_fm = DeepFM(
     10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, UserInteractiveTool.ITEM_EMBEDDING_SIZE], 128, 128,
-    embedding_size=128, learning_rate=0.003, use_bert=False, num_attention_heads=8, batch_size=256,
+    embedding_size=40, learning_rate=0.003, use_bert=True, num_attention_heads=4, batch_size=256,
     deep_layers_activation='sigmoid')
 # exit()
+
+import os
+torch.save(deep_fm.state_dict(), "test.model")
+exit()
 
 """
     train model

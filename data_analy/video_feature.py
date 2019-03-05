@@ -85,7 +85,10 @@ class VideoFeature(object):
         return self.video_dict
 
     def get(self, item_id):
-        return self.video_dict.get(item_id, json.dumps([0 for _ in range(128)]))
+        if item_id not in self.video_dict:
+            print("video embedding is 0!!!!!!")
+            return json.dumps([0 for _ in range(128)])
+        return self.video_dict.get(item_id)
 
     def get_video_embedding(self, item_id):
         start = time.time()
