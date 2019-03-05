@@ -5,6 +5,8 @@ import json
 
 class UserInteractiveTool(object):
 
+    ITEM_EMBEDDING_SIZE = 1000000
+
     def __init__(self, db_path):
         # /Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.txt
         if db_path is not None:

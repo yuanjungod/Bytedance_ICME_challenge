@@ -73,15 +73,15 @@ class DeepFM(torch.nn.Module):
 
     def __init__(self, field_size, tile_word_size, feature_sizes, video_feature_size, audio_feature_size,
                  embedding_size=32, is_shallow_dropout=True, dropout_shallow=[0.5, 0.5],
-                 h_depth=2, deep_layers=[32, 32], is_deep_dropout=True, dropout_deep=[0.5, 0.5, 0.5],
+                 h_depth=2, deep_layers=[128, 64], is_deep_dropout=True, dropout_deep=[0.5, 0.5, 0.5],
                  deep_layers_activation='relu', n_epochs=64, batch_size=256, learning_rate=0.003,
                  optimizer_type='adam', is_batch_norm=False, verbose=True, random_seed=950104, weight_decay=0.0,
                  use_fm=True, use_ffm=False, use_deep=True, loss_type='logloss', eval_metric=roc_auc_score,
-                 use_cuda=True, n_class=2, greater_is_better=True, cin_deep_layers=[], cin_layer_sizes=[30, 30, 30],
-                 cin_activation='identity',
-                 is_cin_bn=False,
+                 use_cuda=True, n_class=2, greater_is_better=True, cin_deep_layers=[100, 32], cin_layer_sizes=[50, 50, 50, 100],
+                 cin_activation='relu',
+                 is_cin_bn=True,
                  cin_direct=False, use_cin_bias=False,
-                 cin_deep_dropouts=[], use_cin=True, use_bert=True, num_attention_heads=8
+                 cin_deep_dropouts=[0.5, 0.5], use_cin=True, use_bert=True, bert_dropouts=0.5, num_attention_heads=8
                  ):
         super(DeepFM, self).__init__()
         self.total_count = 0
@@ -263,7 +263,7 @@ class DeepFM(torch.nn.Module):
         """
         if self.use_bert:
             logger.info("Init bert part")
-            self.config = BertConfig(hidden_size=embedding_size,
+            self.config = BertConfig(hidden_size=embedding_size, num_hidden_layers=3,
                                      num_attention_heads=num_attention_heads, intermediate_size=embedding_size*4)
             self.bert_model = BertModel(self.config, self.use_cuda)
             logger.info("Init bert part succeed")
@@ -282,8 +282,14 @@ class DeepFM(torch.nn.Module):
                 concat_input_size = concat_input_size + sum(self.cin_layer_sizes[1:])
         if self.use_bert:
             concat_input_size += self.embedding_size
-        self.like_concat_linear_layer = nn.Linear(concat_input_size, self.n_class)
-        self.finish_concat_linear_layer = nn.Linear(concat_input_size, self.n_class)
+        self.bert_drop_out = nn.Dropout(bert_dropouts)
+        self.like_concat_linear_layer = nn.Linear(concat_input_size, 128)
+        self.like_concat_linear_layer1 = nn.Linear(128, self.n_class)
+
+        self.finish_concat_linear_layer = nn.Linear(concat_input_size, 128)
+        self.finish_concat_linear_layer2 = nn.Linear(128, self.n_class)
+
+        self.result_drop_out = nn.Dropout(0.8)
 
         print("Init succeed")
 
@@ -385,12 +391,10 @@ class DeepFM(torch.nn.Module):
                 activation = F.relu
 
             if video_feature is not None:
-                # print(type(video_feature))
-                # print(video_feature.size())
 
-                video_feature = self.video_line(video_feature)
-
-                video_feature = activation(video_feature)
+                if self.embedding_size != 128:
+                    video_feature = self.video_line(video_feature)
+                    video_feature = activation(video_feature)
 
                 deep_emb = torch.cat([deep_emb, video_feature], 1)
 
@@ -398,9 +402,10 @@ class DeepFM(torch.nn.Module):
                 # print(type(audio_feature))
                 # print(audio_feature)
                 # print(audio_feature.size())
+                if self.embedding_size != 128:
+                    audio_feature = self.audio_line(audio_feature)
+                    audio_feature = activation(audio_feature)
 
-                audio_feature = self.audio_line(audio_feature)
-                audio_feature = activation(audio_feature)
                 deep_emb = torch.cat([deep_emb, audio_feature], 1)
 
             title_embedding = self.title_embedding(title_feature)
@@ -501,6 +506,7 @@ class DeepFM(torch.nn.Module):
 
             bert_emb = deep_emb.view(bert_emb_size[0], -1, self.embedding_size)
             bert_result = self.bert_model(bert_emb, label)
+            bert_result = self.bert_drop_out(bert_result)
 
         concat_input = fm_first_order
         # print(concat_input.size())
@@ -520,8 +526,17 @@ class DeepFM(torch.nn.Module):
                 concat_input = cin_result
         if self.use_bert:
             concat_input = torch.cat([concat_input, bert_result], 1)
-        like = self.like_concat_linear_layer(concat_input)
-        finish = self.finish_concat_linear_layer(concat_input)
+
+        like = self.result_drop_out(concat_input)
+        like = self.like_concat_linear_layer(like)
+        like = F.softmax(like)
+        like = self.like_concat_linear_layer1(like)
+
+        finish = self.result_drop_out(concat_input)
+        finish = self.finish_concat_linear_layer(finish)
+        finish = F.softmax(finish)
+        finish = self.finish_concat_linear_layer2(finish)
+
         return like, finish
 
     def fit2(self, model, optimizer, criterion, Xi_train, Xv_train, video_feature, audio_feature, title_feature, title_value,
@@ -588,7 +603,7 @@ class DeepFM(torch.nn.Module):
             # print("batch_y_like_train", batch_y_like_train.size())
             like_loss = criterion(like, batch_y_like_train)
             finish_loss = criterion(finish, batch_y_finish_train)
-            loss = like_loss + finish_loss
+            loss = 2*like_loss + finish_loss
             loss.backward()
 
             for param_group in optimizer.param_groups:
