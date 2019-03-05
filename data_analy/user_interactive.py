@@ -5,6 +5,8 @@ import json
 
 class UserInteractiveTool(object):
 
+    ITEM_EMBEDDING_SIZE = 3000000
+
     def __init__(self, db_path):
         # /Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.txt
         if db_path is not None:
@@ -88,11 +90,6 @@ class UserInteractiveTool(object):
             return 12 + symbol
         else:
             return 0
-
-    def one_hot_features(self):
-        self.user_interactive_pd["video_duration"] = self.user_interactive_pd["video_duration"].map(self.one_hot_video_duration)
-        self.user_interactive_pd["create_time"] = self.user_interactive_pd["create_time"].map(self.one_hot_create_time)
-        return self.user_interactive_pd
 
     def create_table(self):
         sql = '''CREATE TABLE USER_TEST
@@ -222,13 +219,14 @@ if __name__ == "__main__":
     # for i in ["ID", "UID", "USER_CITY", "ITEM_ID", "AUTHOR_ID", "ITEM_CITY", "CHANNEL", "FINISH", "LIKE", "MUSIC_ID",
     #           "DEVICE_ID", "CREATE_TIME", "VIDEO_DURATION"]:
     #     interactive_tool.get_max_id(i)
-    user_interactivate_list = interactive_tool.get_all_from_origin_file(
-        "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_test_no_anwser.txt")
-    f = open("/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_no_anwser.json", "w")
-    json.dump(user_interactivate_list, f)
+    # user_interactivate_list = interactive_tool.get_all_from_origin_file(
+    #     "/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_test_no_anwser.txt")
+    # f = open("/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_no_anwser.json", "w")
+    # json.dump(user_interactivate_list, f)
     # f.close()
     # interactive_tool.get_all_from_json_file("/Volumes/Seagate Expansion Drive/byte/track2/final_track2_train.json")
     # print(len(interactive_tool.user_interactivate_list))
     # time.sleep(100)
     # print(interactive_tool.get_max_id("ITEM_ID"))
     # interactive_tool.get_all_from_origin_file("/home/yuanjun/code/Bytedance_ICME_challenge/track2/final_track2_train.txt")
+    interactive_tool.get_max_id("ITEM_ID")

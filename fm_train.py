@@ -1,5 +1,6 @@
 from data_io.data_preprocessor import DataPreprocessor
 from model_zoo.din_xdeep_bert import DeepFM
+from data_analy.user_interactive import UserInteractiveTool
 import torch
 import time
 from model_zoo.focal_loss import FocalLoss
@@ -9,9 +10,14 @@ from common.logger import logger
 # video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
 # title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
-deep_fm = DeepFM(10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, 500000], 128, 128,
-                 embedding_size=128, learning_rate=0.003, use_bert=False, num_attention_heads=8,
-                 batch_size=256, deep_layers_activation='sigmoid')
+deep_fm = DeepFM(
+    10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, UserInteractiveTool.ITEM_EMBEDDING_SIZE], 128, 128,
+    embedding_size=40, learning_rate=0.008, use_bert=True, num_attention_heads=2, batch_size=512, weight_decay=1e-7,
+    deep_layers_activation='sigmoid')
+# exit()
+
+import os
+# torch.save(deep_fm.state_dict(), "test.model")
 # exit()
 
 """
@@ -36,6 +42,7 @@ criterion = FocalLoss(2)
 # F.binary_cross_entropy()
 # F.cross_entropy()
 # torch.nn.BCEloss
+
 
 count = 0
 load_data_time = time.time()
