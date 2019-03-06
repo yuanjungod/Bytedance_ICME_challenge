@@ -17,6 +17,12 @@ deep_fm = DeepFM(
     10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, UserInteractiveTool.ITEM_EMBEDDING_SIZE], 128, 128,
     embedding_size=40, learning_rate=0.008, use_bert=True, num_attention_heads=2, batch_size=512, weight_decay=1e-7,
     deep_layers_activation='sigmoid')
+# for i in deep_fm.parameters():
+#     if isinstance(i, torch.nn.parameter.Parameter):
+#         print(i)
+#     print(type(i))
+# for i in getattr(deep_fm, "fm_first_order_embeddings").parameters():
+#     print(i)
 # exit()
 
 import os
