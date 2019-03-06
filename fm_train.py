@@ -5,6 +5,7 @@ import torch
 import time
 from model_zoo.focal_loss import FocalLoss
 from common.logger import logger
+import datetime
 
 
 video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
@@ -15,19 +16,8 @@ user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 deep_fm = DeepFM(
     10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, UserInteractiveTool.ITEM_EMBEDDING_SIZE], 128, 128,
-    embedding_size=40, learning_rate=0.008, use_bert=True, num_attention_heads=2, batch_size=512, weight_decay=1e-7,
+    embedding_size=40, learning_rate=0.008, use_bert=True, num_attention_heads=2, batch_size=512, weight_decay=1e-5,
     deep_layers_activation='sigmoid')
-# for i in deep_fm.parameters():
-#     if isinstance(i, torch.nn.parameter.Parameter):
-#         print(i)
-#     print(type(i))
-# for i in getattr(deep_fm, "fm_first_order_embeddings").parameters():
-#     print(i)
-# exit()
-
-import os
-# torch.save(deep_fm.state_dict(), "test.model")
-# exit()
 
 """
     train model
@@ -52,13 +42,33 @@ criterion = FocalLoss(2)
 # F.cross_entropy()
 # torch.nn.BCEloss
 
+# print(len(optimizer.param_groups))
+param_optimizer = list(model.named_parameters())
+no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight', "embedding"]
+optimizer_grouped_parameters = [
+    {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 1e-4},
+    {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+]
+# for i in optimizer_grouped_parameters:
+#     print(i)
+# # for name, param in list(model.named_parameters()):
+# #     print(name)
+# exit()
+
 
 count = 0
 load_data_time = time.time()
 
 optimizer = torch.optim.SGD(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
 if model.optimizer_type == 'adam':
-    optimizer = torch.optim.Adam(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
+    # optimizer = torch.optim.Adam(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
+    optimizer = torch.optim.Adam(optimizer_grouped_parameters, lr=model.learning_rate, weight_decay=model.weight_decay)
+    # optimizer = torch.optim.Adam([
+    #             {'params': model.base.parameters()},
+    #             {'params': model.title_embedding.parameters(), 'weight_decay': 1e-8},
+    #             {'params': model.fm_first_order_embeddings.parameters(), 'weight_decay': 1e-8},
+    #             {'params': model.fm_second_order_embeddings.parameters(), 'weight_decay': 1e-8}
+    #         ], lr=model.learning_rate, weight_decay=model.weight_decay)
 elif model.optimizer_type == 'rmsp':
     optimizer = torch.optim.RMSprop(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
 elif model.optimizer_type == 'adag':
@@ -75,6 +85,7 @@ iter_data = data_prepro_tool.get_train_data_from_origin_file(video_path, title_p
 for epoch in range(total_epochs):
 
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
+    log_json = {"epoch": epoch, "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
     logger.info("$$$$$$$$$$$$$$$$$$$$$$$$$$$epoch: %s$$$$$$$$$$$$$$$$$$$$$$$$$$$" % epoch)
     for item in iter_data:
         print("loading consume: %s" % (time.time() - load_data_time))

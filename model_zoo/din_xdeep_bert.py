@@ -30,6 +30,7 @@ from .interest_pooling import InterestPooling1
 from .bert_model import BertConfig, BertModel
 from common.logger import logger
 import json
+import datetime
 
 """
     网络结构部分
@@ -228,7 +229,7 @@ class DeepFM(torch.nn.Module):
                     cin part
                 """
         if self.use_cin:
-            logger.info("Init cin part")
+            logger.info(json.dumps({"init info": "Init cin part"}))
             # conv1d init
             in_channels = self.field_size
             for i, layer_size in enumerate(self.cin_layer_sizes[:-1]):
@@ -256,17 +257,17 @@ class DeepFM(torch.nn.Module):
                         setattr(self, 'cin_deep_bn_' + str(i + 1), nn.BatchNorm1d(self.cin_deep_layers[i]))
                     if len(self.cin_deep_dropouts) != 0:
                         setattr(self, 'cin_linear_' + str(i + 1) + '_dropout', nn.Dropout(self.cin_deep_dropouts[i]))
-            logger.info("Init cin part succeed")
+            logger.info(json.dumps({"init info": "Init cin part succeed"}))
 
         """
            bert layer
         """
         if self.use_bert:
-            logger.info("Init bert part")
+            logger.info(json.dumps({"init info": "Init bert part"}))
             self.config = BertConfig(hidden_size=embedding_size, num_hidden_layers=3,
                                      num_attention_heads=num_attention_heads, intermediate_size=embedding_size*4)
             self.bert_model = BertModel(self.config, self.use_cuda)
-            logger.info("Init bert part succeed")
+            logger.info(json.dumps({"init info": "Init bert part succeed"}))
         """
             linear_layer
         """
@@ -527,13 +528,13 @@ class DeepFM(torch.nn.Module):
         if self.use_bert:
             concat_input = torch.cat([concat_input, bert_result], 1)
 
-        like = self.result_drop_out(concat_input)
-        like = self.like_concat_linear_layer(like)
+        # like = self.result_drop_out(concat_input)
+        like = self.like_concat_linear_layer(concat_input)
         like = F.softmax(like)
         like = self.like_concat_linear_layer1(like)
 
-        finish = self.result_drop_out(concat_input)
-        finish = self.finish_concat_linear_layer(finish)
+        # finish = self.result_drop_out(concat_input)
+        finish = self.finish_concat_linear_layer(concat_input)
         finish = F.softmax(finish)
         finish = self.finish_concat_linear_layer2(finish)
 
@@ -625,8 +626,12 @@ class DeepFM(torch.nn.Module):
                               (count + 1, i + 1, like_auc, finish_auc, current_learn_rate,
                                time() - batch_begin_time))
 
-                        log_json = {"status": "train", "count": count + 1, "loss": "%s" % (total_loss/100), "like_auc": "%s" % like_auc,
-                                    "finish_auc": "%s" % finish_auc, "current_learn_rate": current_learn_rate,
+                        log_json = {"timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                    "status": "train", "count": count + 1,
+                                    "loss": "%s" % (total_loss/100),
+                                    "like_auc": "%s" % like_auc,
+                                    "finish_auc": "%s" % finish_auc,
+                                    "current_learn_rate": current_learn_rate,
                                     "time": time() - epoch_begin_time}
                         logger.info(json.dumps(log_json))
                     except:
@@ -662,7 +667,8 @@ class DeepFM(torch.nn.Module):
                 print('val [%d] loss: %.6f metric: like-%.6f,finish-%.6f, learn rate: %s,  time: %.1f s' %
                       (count + 1, valid_loss, valid_eval[0], valid_eval[1], current_learn_rate,
                        time() - epoch_begin_time))
-                log_json = {"status": "val", "count": count + 1, "loss": "%s" % valid_loss.data,
+                log_json = {"timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "status": "val", "count": count + 1, "loss": "%s" % valid_loss.data,
                             "like_auc": "%s" % valid_eval[0],
                             "finish_auc": "%s" % valid_eval[1], "current_learn_rate": current_learn_rate,
                             "time": time() - epoch_begin_time}
