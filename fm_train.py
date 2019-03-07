@@ -6,6 +6,7 @@ import time
 from model_zoo.focal_loss import FocalLoss
 from common.logger import logger
 import datetime
+from model_zoo.optimization import *
 
 
 video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
@@ -16,8 +17,8 @@ user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 deep_fm = DeepFM(
     10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, UserInteractiveTool.ITEM_EMBEDDING_SIZE], 128, 128,
-    embedding_size=40, learning_rate=0.008, use_bert=True, num_attention_heads=2, batch_size=512, weight_decay=1e-5,
-    deep_layers_activation='sigmoid')
+    embedding_size=128, learning_rate=5e-5, use_bert=True, use_cin=False, use_deep=False, num_attention_heads=8,
+    batch_size=512, weight_decay=0.01, deep_layers_activation='sigmoid', is_shallow_dropout=False)
 
 """
     train model
@@ -25,32 +26,24 @@ deep_fm = DeepFM(
 model = deep_fm.train()
 # model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/20190304/byte_305000.model'
 # deep_fm.load_state_dict(torch.load(model_path))
-model.cuda(0)
-# test_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/val_jsons"
-# test_dir = "/Volumes/Seagate Expansion Drive/byte/track2/val_jsons"
-# test_file_list = [os.path.join(test_dir, i) for i in os.listdir(test_dir)]
-
-# train_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/jsons"
-# train_dir = "/Volumes/Seagate Expansion Drive/byte/track2/jsons"
+# model.cuda(0)
 
 criterion = FocalLoss(2)
-# criterion = nn.BCEWithLogitsLoss()
-# criterion = nn.BCELoss()
-# criterion = F.binary_cross_entropy_with_logits
-# F.cross_entropy()
-# F.binary_cross_entropy()
-# F.cross_entropy()
-# torch.nn.BCEloss
 
 # print(len(optimizer.param_groups))
 param_optimizer = list(model.named_parameters())
-no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight', "embedding"]
+
+no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight', "embeddings"]
 optimizer_grouped_parameters = [
-    {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 1e-4},
+    {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': model.weight_decay},
     {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
 ]
 # for i in optimizer_grouped_parameters:
-#     print(i)
+#     for name in i["params"]:
+#         print(name)
+#     print(i["weight_decay"])
+#     print("*****************************************************")
+# exit()
 # # for name, param in list(model.named_parameters()):
 # #     print(name)
 # exit()
@@ -58,23 +51,23 @@ optimizer_grouped_parameters = [
 
 count = 0
 load_data_time = time.time()
-
-optimizer = torch.optim.SGD(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
-if model.optimizer_type == 'adam':
-    # optimizer = torch.optim.Adam(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
-    optimizer = torch.optim.Adam(optimizer_grouped_parameters, lr=model.learning_rate, weight_decay=model.weight_decay)
-    # optimizer = torch.optim.Adam([
-    #             {'params': model.base.parameters()},
-    #             {'params': model.title_embedding.parameters(), 'weight_decay': 1e-8},
-    #             {'params': model.fm_first_order_embeddings.parameters(), 'weight_decay': 1e-8},
-    #             {'params': model.fm_second_order_embeddings.parameters(), 'weight_decay': 1e-8}
-    #         ], lr=model.learning_rate, weight_decay=model.weight_decay)
-elif model.optimizer_type == 'rmsp':
-    optimizer = torch.optim.RMSprop(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
-elif model.optimizer_type == 'adag':
-    optimizer = torch.optim.Adagrad(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
-
 total_epochs = 5
+t_total = 20000000*total_epochs/model.batch_size
+optimizer = BertAdam(optimizer_grouped_parameters, lr=model.learning_rate, warmup=0.1, t_total=t_total)
+# optimizer = torch.optim.SGD(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
+# if model.optimizer_type == 'adam':
+#     # optimizer = torch.optim.Adam(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
+#     optimizer = torch.optim.Adam(optimizer_grouped_parameters, lr=model.learning_rate, weight_decay=model.weight_decay)
+#     # optimizer = torch.optim.Adam([
+#     #             {'params': model.base.parameters()},
+#     #             {'params': model.title_embedding.parameters(), 'weight_decay': 1e-8},
+#     #             {'params': model.fm_first_order_embeddings.parameters(), 'weight_decay': 1e-8},
+#     #             {'params': model.fm_second_order_embeddings.parameters(), 'weight_decay': 1e-8}
+#     #         ], lr=model.learning_rate, weight_decay=model.weight_decay)
+# elif model.optimizer_type == 'rmsp':
+#     optimizer = torch.optim.RMSprop(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
+# elif model.optimizer_type == 'adag':
+#     optimizer = torch.optim.Adagrad(model.parameters(), lr=model.learning_rate, weight_decay=model.weight_decay)
 
 video_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_video_features.txt"
 title_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_title.txt"

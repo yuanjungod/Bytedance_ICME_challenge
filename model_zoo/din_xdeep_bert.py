@@ -264,7 +264,7 @@ class DeepFM(torch.nn.Module):
         """
         if self.use_bert:
             logger.info(json.dumps({"init info": "Init bert part"}))
-            self.config = BertConfig(hidden_size=embedding_size, num_hidden_layers=3,
+            self.config = BertConfig(hidden_size=embedding_size, num_hidden_layers=6,
                                      num_attention_heads=num_attention_heads, intermediate_size=embedding_size*4)
             self.bert_model = BertModel(self.config, self.use_cuda)
             logger.info(json.dumps({"init info": "Init bert part succeed"}))
@@ -571,7 +571,7 @@ class DeepFM(torch.nn.Module):
         batch_iter = x_size // self.batch_size
         epoch_begin_time = time()
         batch_begin_time = time()
-        current_learn_rate = 0
+        # current_learn_rate = 0
         for i in range(batch_iter + 1):
             self.total_count += 1
             offset = i * self.batch_size
@@ -607,10 +607,10 @@ class DeepFM(torch.nn.Module):
             loss = 2*like_loss + finish_loss
             loss.backward()
 
-            for param_group in optimizer.param_groups:
-                current_learn_rate = self.learning_rate*warmup_linear(self.total_count/(
-                        20000000*total_epochs/self.batch_size))
-                param_group['lr'] = current_learn_rate
+            # for param_group in optimizer.param_groups:
+            #     current_learn_rate = self.learning_rate*warmup_linear(self.total_count/(
+            #             20000000*total_epochs/self.batch_size))
+            #     param_group['lr'] = current_learn_rate
 
             optimizer.step()
             # print(loss)
@@ -623,7 +623,7 @@ class DeepFM(torch.nn.Module):
                         like_auc = self.eval_metric(batch_y_like_train.cpu().detach().numpy(), F.softmax(like, dim=-1).cpu().detach().numpy()[:, 1])
                         finish_auc = self.eval_metric(batch_y_finish_train.cpu().detach().numpy(), F.softmax(finish, dim=-1).cpu().detach().numpy()[:, 1])
                         print('****train***[%d, %5d] metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
-                              (count + 1, i + 1, like_auc, finish_auc, current_learn_rate,
+                              (count + 1, i + 1, like_auc, finish_auc, ",".join(optimizer.get_lr),
                                time() - batch_begin_time))
 
                         log_json = {"timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -631,7 +631,7 @@ class DeepFM(torch.nn.Module):
                                     "loss": "%s" % (total_loss/100),
                                     "like_auc": "%s" % like_auc,
                                     "finish_auc": "%s" % finish_auc,
-                                    "current_learn_rate": current_learn_rate,
+                                    "current_learn_rate": ",".join(optimizer.get_lr),
                                     "time": time() - epoch_begin_time}
                         logger.info(json.dumps(log_json))
                     except:
@@ -665,12 +665,12 @@ class DeepFM(torch.nn.Module):
                 # valid_result.append(valid_eval)
                 print('valid*' * 20)
                 print('val [%d] loss: %.6f metric: like-%.6f,finish-%.6f, learn rate: %s,  time: %.1f s' %
-                      (count + 1, valid_loss, valid_eval[0], valid_eval[1], current_learn_rate,
+                      (count + 1, valid_loss, valid_eval[0], valid_eval[1], ",".join(optimizer.get_lr),
                        time() - epoch_begin_time))
                 log_json = {"timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             "status": "val", "count": count + 1, "loss": "%s" % valid_loss.data,
                             "like_auc": "%s" % valid_eval[0],
-                            "finish_auc": "%s" % valid_eval[1], "current_learn_rate": current_learn_rate,
+                            "finish_auc": "%s" % valid_eval[1], "current_learn_rate": ",".join(optimizer.get_lr),
                             "time": time() - epoch_begin_time}
                 logger.info(json.dumps(log_json))
                 print('valid*' * 20)
