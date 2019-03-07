@@ -10,7 +10,7 @@ class AudioFeatureTool(object):
         if audio_db is not None:
             self.db_client = sqlite3.connect(audio_db)
             self.cursor = self.db_client.cursor()
-        self.result_dict = None
+        # self.result_dict = None
 
     def create_table(self):
         sql = '''CREATE TABLE AUDIO
@@ -55,15 +55,19 @@ class AudioFeatureTool(object):
                 print("audio", count, len(self.audio_dict))
             # print(line)
             item = json.loads(line)
-            self.audio_dict[item["item_id"]] = json.dumps(item["audio_feature_128_dim"])
+            self.audio_dict[int(item["item_id"])] = json.dumps(item["audio_feature_128_dim"])
             line = audio_file.readline()
         audio_file.close()
         return self.audio_dict
 
     def get(self, item_id):
+        if len(self.audio_dict) == 0:
+            print("audio load first!!!!")
+            exit()
         if item_id not in self.audio_dict:
-            print("audio embedding is 0!!!!!!!!!!!!!")
+            # print("audio embedding is 0!!!!!!!!!!!!!")
             return json.dumps([0 for _ in range(128)])
+        # print("audio ok!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return self.audio_dict.get(item_id)
 
     def get_from_db(self, item_id):
@@ -108,15 +112,15 @@ class AudioFeatureTool(object):
         file_count += 1
 
     def get_all_from_json_file(self, video_json_file_list):
-        self.result_dict = dict()
+        # self.audio_dict = dict()
         for video_json_file in video_json_file_list:
             with open(video_json_file) as f:
                 print(f)
                 video_dict = json.load(f)
                 for key, value in video_dict.items():
-                    self.result_dict[key] = value
+                    self.audio_dict[int(key)] = value
         # f.close()
-        return self.result_dict
+        return self.audio_dict
 
 
 if __name__ == "__main__":

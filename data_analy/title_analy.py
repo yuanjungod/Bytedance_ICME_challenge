@@ -73,7 +73,7 @@ class TitleAnalyTool(object):
             if count % 1000000 == 0:
                 print(count)
             item = json.loads(line)
-            self.result_dict[item["item_id"]] = json.dumps(list(item["title_features"].keys()))
+            self.result_dict[int(item["item_id"])] = json.dumps(list(item["title_features"].keys()))
             line = title_file.readline()
         title_file.close()
         return self.result_dict
@@ -82,7 +82,11 @@ class TitleAnalyTool(object):
         if self.result_dict is None:
             print("Please load data")
             exit()
-        return self.result_dict.get(item_id, json.dumps(list()))
+        if item_id not in self.result_dict:
+            # print("title wrong!!!!!!")
+            return json.dumps(list())
+        # print("title OK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        return self.result_dict.get(item_id)
 
     def get_title_feature_size(self):
         start = time.time()

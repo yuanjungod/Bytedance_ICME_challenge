@@ -30,6 +30,7 @@ from .interest_pooling import InterestPooling1
 from .bert_model import BertConfig, BertModel
 from common.logger import logger
 import json
+import traceback
 
 """
     网络结构部分
@@ -289,7 +290,7 @@ class DeepFM(torch.nn.Module):
         self.finish_concat_linear_layer = nn.Linear(concat_input_size, 128)
         self.finish_concat_linear_layer2 = nn.Linear(128, self.n_class)
 
-        self.result_drop_out = nn.Dropout(0.8)
+        # self.result_drop_out = nn.Dropout(0.8)
 
         print("Init succeed")
 
@@ -527,13 +528,13 @@ class DeepFM(torch.nn.Module):
         if self.use_bert:
             concat_input = torch.cat([concat_input, bert_result], 1)
 
-        like = self.result_drop_out(concat_input)
-        like = self.like_concat_linear_layer(like)
+        # like = self.result_drop_out(concat_input)
+        like = self.like_concat_linear_layer(concat_input)
         like = F.softmax(like)
         like = self.like_concat_linear_layer1(like)
 
-        finish = self.result_drop_out(concat_input)
-        finish = self.finish_concat_linear_layer(finish)
+        # finish = self.result_drop_out(concat_input)
+        finish = self.finish_concat_linear_layer(concat_input)
         finish = F.softmax(finish)
         finish = self.finish_concat_linear_layer2(finish)
 
@@ -542,7 +543,7 @@ class DeepFM(torch.nn.Module):
     def fit2(self, model, optimizer, criterion, Xi_train, Xv_train, video_feature, audio_feature, title_feature, title_value,
              y_like_train, y_finish_train, count, Xi_valid=None, Xv_valid=None, y_like_valid=None, y_finish_valid=None,
              video_feature_val=None, audio_feature_val=None, title_feature_val=None,
-             title_value_val=None, save_path=None, total_epochs=3):
+             title_value_val=None, save_path=None, total_epochs=3, current_epoch=0):
 
         # if save_path and not os.path.exists('/'.join(save_path.split('/')[0:-1])):
         #     print("Save path is not existed!")
@@ -583,10 +584,20 @@ class DeepFM(torch.nn.Module):
             batch_y_finish_train = torch.LongTensor(y_finish_train[offset:end])
             # batch_label = Variable(torch.cat([torch.FloatTensor(y_like_train[offset:end]).view(-1, 1),
             #                                   torch.FloatTensor(y_finish_train[offset:end]).view(-1, 1)], -1))
-
-            batch_video_feature = Variable(torch.FloatTensor(video_feature[offset:end]))
-            batch_audio_feature = Variable(torch.FloatTensor(audio_feature[offset:end]))
-
+            try:
+                batch_video_feature = Variable(torch.FloatTensor(video_feature[offset:end]))
+            except:
+                print(len(video_feature[offset:end]))
+                print([len(i) for i in video_feature[offset:end]])
+                traceback.print_exc()
+                exit()
+            try:
+                batch_audio_feature = Variable(torch.FloatTensor(audio_feature[offset:end]))
+            except:
+                print(len([len(i) for i in audio_feature[offset:end]]))
+                print([len(i) for i in audio_feature[offset:end]])
+                traceback.print_exc()
+                exit()
             batch_title_value = Variable(torch.FloatTensor(title_value[offset:end]))
             batch_title_feature = Variable(torch.LongTensor(title_feature[offset:end]))
 
@@ -621,8 +632,8 @@ class DeepFM(torch.nn.Module):
                     try:
                         like_auc = self.eval_metric(batch_y_like_train.cpu().detach().numpy(), F.softmax(like, dim=-1).cpu().detach().numpy()[:, 1])
                         finish_auc = self.eval_metric(batch_y_finish_train.cpu().detach().numpy(), F.softmax(finish, dim=-1).cpu().detach().numpy()[:, 1])
-                        print('****train***[%d, %5d] metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
-                              (count + 1, i + 1, like_auc, finish_auc, current_learn_rate,
+                        print('****train***[%d %d, %5d] metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
+                              (current_epoch, count + 1, i + 1, like_auc, finish_auc, current_learn_rate,
                                time() - batch_begin_time))
 
                         log_json = {"status": "train", "count": count + 1, "loss": "%s" % (total_loss/100), "like_auc": "%s" % like_auc,

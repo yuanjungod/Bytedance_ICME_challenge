@@ -12,7 +12,7 @@ from common.logger import logger
 # user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
 deep_fm = DeepFM(
     10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, UserInteractiveTool.ITEM_EMBEDDING_SIZE], 128, 128,
-    embedding_size=40, learning_rate=0.008, use_bert=True, num_attention_heads=2, batch_size=512, weight_decay=1e-7,
+    embedding_size=64, learning_rate=0.03, use_cin=False, use_bert=True, num_attention_heads=2, batch_size=512, weight_decay=0,
     deep_layers_activation='sigmoid')
 # exit()
 
@@ -71,6 +71,14 @@ for epoch in range(total_epochs):
         print("loading consume: %s" % (time.time() - load_data_time))
         train_result, val_result = item
         print("train_result len:", len(train_result["index"]))
+        print("data check index:",  train_result["index"][0])
+        print("data check value:",  train_result["value"][0])
+        print("data check video:",  train_result["video"][0])
+        print("data check audio:",  train_result['audio'][0])
+        print("data check title:",  train_result["title"][0])
+        print("data check title value:",  train_result["title_value"][0])
+        print("data check like:",  train_result["like"][0])
+        print("data check finish:",  train_result["finish"][0])
         deep_fm.fit2(model, optimizer, criterion, train_result["index"], train_result["value"], train_result["video"],
                      train_result['audio'], train_result["title"], train_result["title_value"], train_result["like"],
                      train_result["finish"], count,
@@ -78,7 +86,7 @@ for epoch in range(total_epochs):
                      Xi_valid=val_result["index"], Xv_valid=val_result["value"], audio_feature_val=val_result["audio"],
                      y_like_valid=val_result["like"], y_finish_valid=val_result["finish"],
                      video_feature_val=val_result["video"], title_feature_val=val_result["title"],
-                     title_value_val=val_result["title_value"], total_epochs=total_epochs)
+                     title_value_val=val_result["title_value"], total_epochs=total_epochs, current_epoch=epoch)
         count += 1
         load_data_time = time.time()
     iter_data = data_prepro_tool.get_train_data_from_origin_file(video_path, title_path, interactive_file, audio_file_path)
