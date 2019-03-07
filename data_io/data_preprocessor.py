@@ -81,6 +81,9 @@ class DataPreprocessor(object):
             random.shuffle(self.user_action_list)
             print("user action init finish")
         else:
+            for user in self.val_user_list:
+                self.user_action_list.remove(user)
+            self.val_user_list = list()
             random.shuffle(self.user_action_list)
             self.train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
                                  'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
@@ -94,8 +97,8 @@ class DataPreprocessor(object):
             else:
                 result = self.train_result
                 self.train_count += 1
-                if user in self.val_user_list:
-                    continue
+                # if user in self.val_user_list:
+                #     continue
             user_action, item_id, like, finish = json.loads(user)
             user_action.append(item_id % UserInteractiveTool.ITEM_EMBEDDING_SIZE)
             result['item_id'].append(item_id)
