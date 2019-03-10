@@ -42,7 +42,7 @@ class VideoFeature(object):
                 # break
             # print(line)
             item = json.loads(line)
-            self.video_dict[item["item_id"]] = json.dumps(item["video_feature_dim_128"])
+            self.video_dict[int(item["item_id"])] = json.dumps(item["video_feature_dim_128"])
             line = video_file.readline()
         video_file.close()
         return self.video_dict
@@ -80,14 +80,20 @@ class VideoFeature(object):
                 print(f)
                 video_dict = json.load(f)
                 for key, value in video_dict.items():
-                    self.video_dict[key] = value
+                    # print(type(key))
+                    # exit()
+                    self.video_dict[int(key)] = value
         # f.close()
         return self.video_dict
 
     def get(self, item_id):
+        if len(self.video_dict) == 0:
+            print("load video first!!!!!!")
+            exit()
         if item_id not in self.video_dict:
-            print("video embedding is 0!!!!!!")
+            # print("video embedding is 0!!!!!!")
             return json.dumps([0 for _ in range(128)])
+        # print("video ok!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return self.video_dict.get(item_id)
 
     def get_video_embedding(self, item_id):

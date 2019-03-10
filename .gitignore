@@ -125,3 +125,5 @@ tensorflow_code
 models
 
 *.csv
+.idea/workspace.xml
+track2/*

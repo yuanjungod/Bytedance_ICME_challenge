@@ -31,6 +31,8 @@ from .bert_model import BertConfig, BertModel
 from common.logger import logger
 import json
 import datetime
+import traceback
+import random
 
 """
     网络结构部分
@@ -290,7 +292,7 @@ class DeepFM(torch.nn.Module):
         self.finish_concat_linear_layer = nn.Linear(concat_input_size, 128)
         self.finish_concat_linear_layer2 = nn.Linear(128, self.n_class)
 
-        self.result_drop_out = nn.Dropout(0.8)
+        # self.result_drop_out = nn.Dropout(0.8)
 
         print("Init succeed")
 
@@ -370,56 +372,56 @@ class DeepFM(torch.nn.Module):
             if self.is_shallow_dropout:
                 ffm_second_order = self.ffm_second_order_dropout(ffm_second_order)
 
+        if self.use_fm:
+            deep_emb = torch.cat(fm_second_order_emb_arr, 1)
+        elif self.use_ffm:
+            deep_emb = torch.cat([sum(ffm_second_order_embs) for ffm_second_order_embs in ffm_second_order_emb_arr],
+                                 1)
+        else:
+            deep_emb = torch.cat([(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
+                                  enumerate(self.fm_second_order_embeddings)], 1)
+
+        if self.deep_layers_activation == 'sigmoid':
+            activation = torch.sigmoid
+        elif self.deep_layers_activation == 'tanh':
+            activation = F.tanh
+        else:
+            activation = F.relu
+
+        if video_feature is not None:
+
+            if self.embedding_size != 128:
+                video_feature = self.video_line(video_feature)
+                video_feature = activation(video_feature)
+
+            deep_emb = torch.cat([deep_emb, video_feature], 1)
+
+        if audio_feature is not None:
+            # print(type(audio_feature))
+            # print(audio_feature)
+            # print(audio_feature.size())
+            if self.embedding_size != 128:
+                audio_feature = self.audio_line(audio_feature)
+                audio_feature = activation(audio_feature)
+
+            deep_emb = torch.cat([deep_emb, audio_feature], 1)
+
+        title_embedding = self.title_embedding(title_feature)
+        # title_embedding = title_embedding*title_value
+        # title_embedding = title_embedding.permute(0, 2, 1)
+        # title_embedding = torch.sum(title_embedding, -1)
+        #
+        # title_embedding = activation(title_embedding)
+        title_size = title_embedding.size()
+        title_embedding = title_embedding.view(-1, title_size[1] * title_size[2])
+        title_embedding = self.interest_pooling(title_embedding, title_value)
+
+        deep_emb = torch.cat([deep_emb, title_embedding], 1)
+
         """
             deep part
         """
         if self.use_deep:
-
-            if self.use_fm:
-                deep_emb = torch.cat(fm_second_order_emb_arr, 1)
-            elif self.use_ffm:
-                deep_emb = torch.cat([sum(ffm_second_order_embs) for ffm_second_order_embs in ffm_second_order_emb_arr],
-                                     1)
-            else:
-                deep_emb = torch.cat([(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
-                                      enumerate(self.fm_second_order_embeddings)], 1)
-
-            if self.deep_layers_activation == 'sigmoid':
-                activation = torch.sigmoid
-            elif self.deep_layers_activation == 'tanh':
-                activation = F.tanh
-            else:
-                activation = F.relu
-
-            if video_feature is not None:
-
-                if self.embedding_size != 128:
-                    video_feature = self.video_line(video_feature)
-                    video_feature = activation(video_feature)
-
-                deep_emb = torch.cat([deep_emb, video_feature], 1)
-
-            if audio_feature is not None:
-                # print(type(audio_feature))
-                # print(audio_feature)
-                # print(audio_feature.size())
-                if self.embedding_size != 128:
-                    audio_feature = self.audio_line(audio_feature)
-                    audio_feature = activation(audio_feature)
-
-                deep_emb = torch.cat([deep_emb, audio_feature], 1)
-
-            title_embedding = self.title_embedding(title_feature)
-            # title_embedding = title_embedding*title_value
-            # title_embedding = title_embedding.permute(0, 2, 1)
-            # title_embedding = torch.sum(title_embedding, -1)
-            #
-            # title_embedding = activation(title_embedding)
-            title_size = title_embedding.size()
-            title_embedding = title_embedding.view(-1, title_size[1]*title_size[2])
-            title_embedding = self.interest_pooling(title_embedding, title_value)
-
-            deep_emb = torch.cat([deep_emb, title_embedding], 1)
 
             if self.is_deep_dropout:
                 drop_deep_emb = self.linear_0_dropout(deep_emb)
@@ -501,7 +503,7 @@ class DeepFM(torch.nn.Module):
         if self.use_bert:
             bert_emb_size = deep_emb.size()
             # size = embeddings.size()
-            label = torch.zeros(bert_emb_size[0], 1, dtype=torch.long)
+            label = Variable(torch.zeros(bert_emb_size[0], 1, dtype=torch.long))
             if self.use_cuda:
                 label = label.cuda()
 
@@ -543,7 +545,7 @@ class DeepFM(torch.nn.Module):
     def fit2(self, model, optimizer, criterion, Xi_train, Xv_train, video_feature, audio_feature, title_feature, title_value,
              y_like_train, y_finish_train, count, Xi_valid=None, Xv_valid=None, y_like_valid=None, y_finish_valid=None,
              video_feature_val=None, audio_feature_val=None, title_feature_val=None,
-             title_value_val=None, save_path=None, total_epochs=3):
+             title_value_val=None, save_path=None, total_epochs=3, current_epoch=0):
 
         # if save_path and not os.path.exists('/'.join(save_path.split('/')[0:-1])):
         #     print("Save path is not existed!")
@@ -584,10 +586,20 @@ class DeepFM(torch.nn.Module):
             batch_y_finish_train = torch.LongTensor(y_finish_train[offset:end])
             # batch_label = Variable(torch.cat([torch.FloatTensor(y_like_train[offset:end]).view(-1, 1),
             #                                   torch.FloatTensor(y_finish_train[offset:end]).view(-1, 1)], -1))
-
-            batch_video_feature = Variable(torch.FloatTensor(video_feature[offset:end]))
-            batch_audio_feature = Variable(torch.FloatTensor(audio_feature[offset:end]))
-
+            try:
+                batch_video_feature = Variable(torch.FloatTensor(video_feature[offset:end]))
+            except:
+                print(len(video_feature[offset:end]))
+                print([len(i) for i in video_feature[offset:end]])
+                traceback.print_exc()
+                exit()
+            try:
+                batch_audio_feature = Variable(torch.FloatTensor(audio_feature[offset:end]))
+            except:
+                print(len([len(i) for i in audio_feature[offset:end]]))
+                print([len(i) for i in audio_feature[offset:end]])
+                traceback.print_exc()
+                exit()
             batch_title_value = Variable(torch.FloatTensor(title_value[offset:end]))
             batch_title_feature = Variable(torch.LongTensor(title_feature[offset:end]))
 
@@ -604,7 +616,8 @@ class DeepFM(torch.nn.Module):
             # print("batch_y_like_train", batch_y_like_train.size())
             like_loss = criterion(like, batch_y_like_train)
             finish_loss = criterion(finish, batch_y_finish_train)
-            loss = 2*like_loss + finish_loss
+            # loss = like_loss + finish_loss
+            loss = like_loss
             loss.backward()
 
             # for param_group in optimizer.param_groups:
@@ -623,7 +636,7 @@ class DeepFM(torch.nn.Module):
                         like_auc = self.eval_metric(batch_y_like_train.cpu().detach().numpy(), F.softmax(like, dim=-1).cpu().detach().numpy()[:, 1])
                         finish_auc = self.eval_metric(batch_y_finish_train.cpu().detach().numpy(), F.softmax(finish, dim=-1).cpu().detach().numpy()[:, 1])
                         print('****train***[%d, %5d] metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
-                              (count + 1, i + 1, like_auc, finish_auc, ",".join(optimizer.get_lr),
+                              (count + 1, i + 1, like_auc, finish_auc, 0,
                                time() - batch_begin_time))
 
                         log_json = {"timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -631,7 +644,7 @@ class DeepFM(torch.nn.Module):
                                     "loss": "%s" % (total_loss/100),
                                     "like_auc": "%s" % like_auc,
                                     "finish_auc": "%s" % finish_auc,
-                                    "current_learn_rate": ",".join(optimizer.get_lr),
+                                    "current_learn_rate": 0,
                                     "time": time() - epoch_begin_time}
                         logger.info(json.dumps(log_json))
                     except:
@@ -644,7 +657,7 @@ class DeepFM(torch.nn.Module):
             if save_path and self.total_count % 8000 == 0:
                 torch.save(self.state_dict(), os.path.join(save_path, "byte_%s.model" % self.total_count))
 
-        if Xi_valid is not None:
+        if Xi_valid is not None and random.random() > 0.8:
             Xi_valid = np.array(Xi_valid).reshape((-1, self.field_size, 1))
             Xv_valid = np.array(Xv_valid)
 
@@ -665,16 +678,17 @@ class DeepFM(torch.nn.Module):
                 # valid_result.append(valid_eval)
                 print('valid*' * 20)
                 print('val [%d] loss: %.6f metric: like-%.6f,finish-%.6f, learn rate: %s,  time: %.1f s' %
-                      (count + 1, valid_loss, valid_eval[0], valid_eval[1], ",".join(optimizer.get_lr),
+                      (count + 1, valid_loss, valid_eval[0], valid_eval[1], 0,
                        time() - epoch_begin_time))
                 log_json = {"timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             "status": "val", "count": count + 1, "loss": "%s" % valid_loss.data,
                             "like_auc": "%s" % valid_eval[0],
-                            "finish_auc": "%s" % valid_eval[1], "current_learn_rate": ",".join(optimizer.get_lr),
+                            "finish_auc": "%s" % valid_eval[1], "current_learn_rate": 0,
                             "time": time() - epoch_begin_time}
                 logger.info(json.dumps(log_json))
                 print('valid*' * 20)
             except:
+                traceback.print_exc()
                 print("eval wrong!!!!!!")
 
         # train_loss, train_eval = self.eval_by_batch(Xi_train, Xv_train, y_like_train, y_finish_train, x_size,

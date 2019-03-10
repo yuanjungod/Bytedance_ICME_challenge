@@ -60,7 +60,7 @@ class DataPreprocessor(object):
                       "video": [], 'audio': [], 'feature_sizes': self.FEATURE_SIZES,
                       'tile_word_size': self.title_feature_tool.MAX_WORD}
 
-    def get_train_data_from_origin_file(self, video_path, title_path, interactive_file, audio_file_path, step=800000):
+    def get_train_data_from_origin_file(self, video_path, title_path, interactive_file, audio_file_path, step=500000):
         self.FIELD_SIZE = 10
         self.FEATURE_SIZES = [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, UserInteractiveTool.ITEM_EMBEDDING_SIZE]
         # self.FEATURE_SIZES = [80000, 400, 900000, 500, 5, 90000, 80000, 30, 20]
@@ -90,7 +90,7 @@ class DataPreprocessor(object):
                                  'tile_word_size': self.title_feature_tool.MAX_WORD}
 
         for user in self.user_action_list:
-            if self.val_count < 500000 and random.random() > 0.998:
+            if self.val_count < 100000 and random.random() > 0.5:
                 self.val_user_list.append(user)
                 result = self.val_result
                 self.val_count += 1
@@ -109,7 +109,8 @@ class DataPreprocessor(object):
             title_list = json.loads(self.title_feature_tool.get(item_id))
             result['title'].append([int(title_list[i]) if i < len(title_list) else 0 for i in range(30)])
             result['title_value'].append([1 if i < len(title_list) else 0 for i in range(30)])
-            result['video'].append(json.loads(self.video_feature_tool.get(item_id)))
+            video_list = json.loads(self.video_feature_tool.get(item_id))
+            result['video'].append(video_list if len(video_list) == 128 else [0 for _ in range(128)])
             result['audio'].append(json.loads(self.audio_feature_tool.get(item_id)))
             if self.train_count >= step:
                 yield self.train_result, self.val_result
