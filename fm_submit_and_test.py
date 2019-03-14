@@ -3,38 +3,44 @@ import torch
 import os
 import json
 import pandas
+import time
 
 result_dict = {"uid": [], "item_id": [], "finish_probability": [], "like_probability": []}
 # cal_result = dict()
-deep_fm = DeepFM(10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, 500000], 128, 128,
-                 embedding_size=128, learning_rate=0.003, use_bert=True, num_attention_heads=8,
-                 batch_size=256, deep_layers_activation='sigmoid')
+deep_fm = DeepFM(10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, 4122689], 128, 128,
+                 embedding_size=64, learning_rate=0.001, use_bert=True, num_attention_heads=8,
+                 batch_size=256, deep_layers_activation='relu')
 result_list = list()
 
 
 def submit():
 
     # model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/finish/20190223/byte_25000.model'
-    # model_path = '/Volumes/Seagate Expansion Drive/byte/track2/models/20190304/byte_295000.model'
-    model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/20190304/byte_295000.model'
+    model_path = '/Volumes/Seagate Expansion Drive/byte/track2/models/20190314/byte_704000.model'
+    # model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/20190304/byte_295000.model'
 
-    # deep_fm.load_state_dict(torch.load(model_path, map_location='cpu'))
-    deep_fm.load_state_dict(torch.load(model_path))
-    deep_fm.cuda(0)
-    submit_path_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/submit_jsons/"
-    # submit_path_dir = "/Volumes/Seagate Expansion Drive/byte/track2/submit_jsons"
+    deep_fm.load_state_dict(torch.load(model_path, map_location='cpu'))
+    # deep_fm.load_state_dict(torch.load(model_path))
+    # deep_fm.cuda(0)
+    # submit_path_dir = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/submit_jsons/"
+    submit_path_dir = "/Volumes/Seagate Expansion Drive/byte/track2/submit_jsons"
     submit_files = [os.path.join(submit_path_dir, i) for i in os.listdir(submit_path_dir)]
-
+    # zero_embedding = [0 for _ in range(128)]
     for file in submit_files:
         print(file)
         fp = open(file, "r")
         result = json.load(fp)
         fp.close()
 
+        result['video'] = [i if len(i) == 128 else [0 for _ in range(128)] for i in result['video']]
+        result['audio'] = [i if len(i) == 128 else [0 for _ in range(128)] for i in result['audio']]
+
         # print("audio", result["audio"][0], type(result["audio"][0]))
         # print("video", result["video"][0], type(result["video"][0]))
 
         step = 512
+        start = time.time()
+        # print()
         for i in range(0, len(result["index"]), step):
             like_preb, finish_preb = deep_fm.predict_proba(
                 result["index"][i: i+step], result["value"][i: i+step], result["video"][i: i+step],
@@ -47,6 +53,7 @@ def submit():
                 uid = result["index"][i+j][0]
                 item_id = result["item_id"][i+j]
                 result_list.append([uid, item_id, like_preb[j], finish_preb[j]])
+            print("consume: %s" % (time.time()-start))
 
 
 submit()

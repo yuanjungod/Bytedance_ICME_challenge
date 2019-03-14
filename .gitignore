@@ -122,6 +122,5 @@ dmypy.json
 tensorflow_code
 
 # Models
-models
 
 *.csv

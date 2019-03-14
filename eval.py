@@ -32,8 +32,9 @@ print(debug)
 video_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/video.db"
 title_feature_path = "/Volumes/Seagate Expansion Drive/byte/track2/title.db"
 user_db_path = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
-deep_fm = DeepFM(10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, 500000], 128, 128,
-                 embedding_size=128, learning_rate=0.003, use_bert=True, num_attention_heads=8, batch_size=128)
+deep_fm = DeepFM(10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, 4122689], 128, 128,
+                 embedding_size=64, learning_rate=0.001, use_bert=True, num_attention_heads=8,
+                 batch_size=256, deep_layers_activation='relu')
 # exit()
 
 
@@ -42,10 +43,11 @@ deep_fm = DeepFM(10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20,
 """
 model = deep_fm.train()
 # model_path = '/Volumes/Seagate Expansion Drive/byte/track2/models/20190304/byte_305000.model'
-model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/20190304/byte_305000.model'
-# deep_fm.load_state_dict(torch.load(model_path, map_location='cpu'))
-deep_fm.load_state_dict(torch.load(model_path))
-model.cuda(0)
+# model_path = '/home/yuanjun/code/Bytedance_ICME_challenge/track2/models/20190304/byte_305000.model'
+model_path = '/Volumes/Seagate Expansion Drive/byte/track2/models/20190314/byte_704000.model'
+deep_fm.load_state_dict(torch.load(model_path, map_location='cpu'))
+# deep_fm.load_state_dict(torch.load(model_path))
+# model.cuda(0)
 
 load_data_time = time.time()
 
@@ -59,7 +61,7 @@ if debug:
     interactive_file = "/Volumes/Seagate Expansion Drive/byte/track2/user.db"
     audio_file_path = "/Volumes/Seagate Expansion Drive/byte/track2/audio.db"
     data_prepro_tool = DataPreprocessor(video_path, interactive_file, title_path, audio_file_path)
-    result_list = data_prepro_tool.get_train_data(100)
+    result_list = data_prepro_tool.get_train_data(1000)
 else:
     video_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_video_features.txt"
     title_path = "/home/yuanjun/code/Bytedance_ICME_challenge/track2/track2_title.txt"
@@ -75,7 +77,7 @@ like_list = list()
 finish_list = list()
 total_count = 0
 
-for train_result, val_result in result_list:
+for train_result in result_list:
     result = train_result
     total_count += len(result["index"])
     like_preb, finish_preb = deep_fm.predict_proba(

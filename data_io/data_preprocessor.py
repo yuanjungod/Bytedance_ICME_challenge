@@ -44,7 +44,7 @@ class DataPreprocessor(object):
             users = self.user_interactive_tool.get(i, i+step)
             for user in users:
                 user_action, item_id, like, finish = user
-                user_action.append(item_id % 500000)
+                user_action.append(item_id % UserInteractiveTool.ITEM_EMBEDDING_SIZE)
                 result['item_id'].append(item_id)
                 result['like'].append(like)
                 result['finish'].append(finish)
@@ -61,6 +61,11 @@ class DataPreprocessor(object):
                       'tile_word_size': self.title_feature_tool.MAX_WORD}
 
     def get_train_data_from_origin_file(self, video_path, title_path, interactive_file, audio_file_path, step=800000):
+        print("load all train data!!!")
+        self.train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
+                             'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
+                             'tile_word_size': self.title_feature_tool.MAX_WORD}
+        self.train_count = 0
         self.FIELD_SIZE = 10
         self.FEATURE_SIZES = [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, UserInteractiveTool.ITEM_EMBEDDING_SIZE]
         # self.FEATURE_SIZES = [80000, 400, 900000, 500, 5, 90000, 80000, 30, 20]
@@ -85,12 +90,9 @@ class DataPreprocessor(object):
                 self.user_action_list.remove(user)
             self.val_user_list = list()
             random.shuffle(self.user_action_list)
-            self.train_result = {'like': [], 'finish': [], 'index': [], 'value': [], 'title': [], 'title_value': [],
-                                 'item_id': [], "video": [], "audio": [], 'feature_sizes': self.FEATURE_SIZES,
-                                 'tile_word_size': self.title_feature_tool.MAX_WORD}
 
         for user in self.user_action_list:
-            if self.val_count < 500000 and random.random() > 0.998:
+            if self.val_count < 500000 and random.random() > 0.5:
                 self.val_user_list.append(user)
                 result = self.val_result
                 self.val_count += 1
@@ -148,7 +150,8 @@ class DataPreprocessor(object):
             result['title'].append([int(title_list[i]) if i < len(title_list) else 0 for i in range(30)])
             result['title_value'].append([1 if i < len(title_list) else 0 for i in range(30)])
             result['video'].append(json.loads(self.video_feature_tool.get(item_id)))
-            result['audio'].append(json.loads(self.audio_feature_tool.get(item_id)))
+            audio_embedding = json.loads(self.audio_feature_tool.get(item_id))
+            result['audio'].append(audio_embedding if len(audio_embedding) == 128 else [0 for _ in range(128)])
         return result
 
 

@@ -284,13 +284,13 @@ class DeepFM(torch.nn.Module):
         if self.use_bert:
             concat_input_size += self.embedding_size
         self.bert_drop_out = nn.Dropout(bert_dropouts)
-        self.like_concat_linear_layer = nn.Linear(concat_input_size, 128)
-        self.like_concat_linear_layer1 = nn.Linear(128, self.n_class)
+        # self.like_concat_linear_layer = nn.Linear(concat_input_size, 128)
+        self.like_concat_linear_layer1 = nn.Linear(concat_input_size, self.n_class)
 
-        self.finish_concat_linear_layer = nn.Linear(concat_input_size, 128)
-        self.finish_concat_linear_layer2 = nn.Linear(128, self.n_class)
+        # self.finish_concat_linear_layer = nn.Linear(concat_input_size, 128)
+        self.finish_concat_linear_layer2 = nn.Linear(concat_input_size, self.n_class)
 
-        self.result_drop_out = nn.Dropout(0.8)
+        # self.result_drop_out = nn.Dropout(0.8)
 
         print("Init succeed")
 
@@ -371,55 +371,58 @@ class DeepFM(torch.nn.Module):
                 ffm_second_order = self.ffm_second_order_dropout(ffm_second_order)
 
         """
+           deep common 
+        """
+        if self.use_fm:
+            deep_emb = torch.cat(fm_second_order_emb_arr, 1)
+        elif self.use_ffm:
+            deep_emb = torch.cat([sum(ffm_second_order_embs) for ffm_second_order_embs in ffm_second_order_emb_arr],
+                                 1)
+        else:
+            deep_emb = torch.cat([(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
+                                  enumerate(self.fm_second_order_embeddings)], 1)
+
+        if self.deep_layers_activation == 'sigmoid':
+            activation = torch.sigmoid
+        elif self.deep_layers_activation == 'tanh':
+            activation = F.tanh
+        else:
+            activation = F.relu
+
+        if video_feature is not None:
+
+            if self.embedding_size != 128:
+                video_feature = self.video_line(video_feature)
+                video_feature = activation(video_feature)
+
+            deep_emb = torch.cat([deep_emb, video_feature], 1)
+
+        if audio_feature is not None:
+            # print(type(audio_feature))
+            # print(audio_feature)
+            # print(audio_feature.size())
+            if self.embedding_size != 128:
+                audio_feature = self.audio_line(audio_feature)
+                audio_feature = activation(audio_feature)
+
+            deep_emb = torch.cat([deep_emb, audio_feature], 1)
+
+        title_embedding = self.title_embedding(title_feature)
+        # title_embedding = title_embedding*title_value
+        # title_embedding = title_embedding.permute(0, 2, 1)
+        # title_embedding = torch.sum(title_embedding, -1)
+        #
+        # title_embedding = activation(title_embedding)
+        title_size = title_embedding.size()
+        title_embedding = title_embedding.view(-1, title_size[1]*title_size[2])
+        title_embedding = self.interest_pooling(title_embedding, title_value)
+
+        deep_emb = torch.cat([deep_emb, title_embedding], 1)
+
+        """
             deep part
         """
         if self.use_deep:
-
-            if self.use_fm:
-                deep_emb = torch.cat(fm_second_order_emb_arr, 1)
-            elif self.use_ffm:
-                deep_emb = torch.cat([sum(ffm_second_order_embs) for ffm_second_order_embs in ffm_second_order_emb_arr],
-                                     1)
-            else:
-                deep_emb = torch.cat([(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
-                                      enumerate(self.fm_second_order_embeddings)], 1)
-
-            if self.deep_layers_activation == 'sigmoid':
-                activation = torch.sigmoid
-            elif self.deep_layers_activation == 'tanh':
-                activation = F.tanh
-            else:
-                activation = F.relu
-
-            if video_feature is not None:
-
-                if self.embedding_size != 128:
-                    video_feature = self.video_line(video_feature)
-                    video_feature = activation(video_feature)
-
-                deep_emb = torch.cat([deep_emb, video_feature], 1)
-
-            if audio_feature is not None:
-                # print(type(audio_feature))
-                # print(audio_feature)
-                # print(audio_feature.size())
-                if self.embedding_size != 128:
-                    audio_feature = self.audio_line(audio_feature)
-                    audio_feature = activation(audio_feature)
-
-                deep_emb = torch.cat([deep_emb, audio_feature], 1)
-
-            title_embedding = self.title_embedding(title_feature)
-            # title_embedding = title_embedding*title_value
-            # title_embedding = title_embedding.permute(0, 2, 1)
-            # title_embedding = torch.sum(title_embedding, -1)
-            #
-            # title_embedding = activation(title_embedding)
-            title_size = title_embedding.size()
-            title_embedding = title_embedding.view(-1, title_size[1]*title_size[2])
-            title_embedding = self.interest_pooling(title_embedding, title_value)
-
-            deep_emb = torch.cat([deep_emb, title_embedding], 1)
 
             if self.is_deep_dropout:
                 drop_deep_emb = self.linear_0_dropout(deep_emb)
@@ -439,6 +442,9 @@ class DeepFM(torch.nn.Module):
                 if self.is_deep_dropout:
                     x_deep = getattr(self, 'linear_' + str(i + 1) + '_dropout')(x_deep)
 
+        """
+           cin part
+        """
         if self.use_cin:
             # cin_embs = fm_embs #[N,H0,K]
 
@@ -529,14 +535,14 @@ class DeepFM(torch.nn.Module):
             concat_input = torch.cat([concat_input, bert_result], 1)
 
         # like = self.result_drop_out(concat_input)
-        like = self.like_concat_linear_layer(concat_input)
-        like = F.softmax(like)
-        like = self.like_concat_linear_layer1(like)
+        # like = self.like_concat_linear_layer(concat_input)
+        # like = torch.sigmoid(like)
+        like = self.like_concat_linear_layer1(concat_input)
 
         # finish = self.result_drop_out(concat_input)
-        finish = self.finish_concat_linear_layer(concat_input)
-        finish = F.softmax(finish)
-        finish = self.finish_concat_linear_layer2(finish)
+        # finish = self.finish_concat_linear_layer(concat_input)
+        # finish = torch.sigmoid(finish)
+        finish = self.finish_concat_linear_layer2(concat_input)
 
         return like, finish
 
@@ -604,7 +610,7 @@ class DeepFM(torch.nn.Module):
             # print("batch_y_like_train", batch_y_like_train.size())
             like_loss = criterion(like, batch_y_like_train)
             finish_loss = criterion(finish, batch_y_finish_train)
-            loss = 2*like_loss + finish_loss
+            loss = like_loss + finish_loss
             loss.backward()
 
             # for param_group in optimizer.param_groups:
