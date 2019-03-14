@@ -83,9 +83,12 @@ class BertAdam(Optimizer):
     def get_lr(self):
         lr = []
         for group in self.param_groups:
+            # print(group['lr'])
             for p in group['params']:
                 state = self.state[p]
+                # print("state length:", len(state))
                 if len(state) == 0:
+                    # print(p)
                     return [0]
                 if group['t_total'] != -1:
                     schedule_fct = SCHEDULES[group['schedule']]
@@ -115,6 +118,7 @@ class BertAdam(Optimizer):
                     raise RuntimeError('Adam does not support sparse gradients, please consider SparseAdam instead')
 
                 state = self.state[p]
+                # print("fuck state", state)
 
                 # State initialization
                 if len(state) == 0:

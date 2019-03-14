@@ -6,7 +6,7 @@ from common.logger import logger
 import datetime
 from model_zoo.optimization import *
 
-torch.optim.SparseAdam
+
 def run(iter_data, data_prepro_tool, video_path, title_path, interactive_file, audio_file_path):
     deep_fm = DeepFM(
         10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, UserInteractiveTool.ITEM_EMBEDDING_SIZE], 128, 128,
@@ -89,4 +89,5 @@ def run(iter_data, data_prepro_tool, video_path, title_path, interactive_file, a
             count += 1
             load_data_time = time.time()
         iter_data = data_prepro_tool.get_train_data_from_origin_file(video_path, title_path, interactive_file, audio_file_path)
+
 

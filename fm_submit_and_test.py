@@ -10,6 +10,7 @@ result_dict = {"uid": [], "item_id": [], "finish_probability": [], "like_probabi
 deep_fm = DeepFM(10, 140000, [80000, 400, 900000, 500, 10, 90000, 80000, 30, 20, 4122689], 128, 128,
                  embedding_size=64, learning_rate=0.001, use_bert=True, num_attention_heads=8,
                  batch_size=256, deep_layers_activation='relu')
+
 result_list = list()
 
 
