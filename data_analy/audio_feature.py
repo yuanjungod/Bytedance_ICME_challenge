@@ -1,12 +1,14 @@
 import json
 import sqlite3
 import time
+import multiprocessing
 
 
 class AudioFeatureTool(object):
 
     def __init__(self, audio_db):
-        self.audio_dict = dict()
+        # self.audio_dict = dict()
+        self.audio_dict = multiprocessing.Manager().dict()
         if audio_db is not None:
             self.db_client = sqlite3.connect(audio_db)
             self.cursor = self.db_client.cursor()

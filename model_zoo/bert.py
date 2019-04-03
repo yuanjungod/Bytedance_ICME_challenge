@@ -26,13 +26,14 @@ import torch.optim as optim
 from torch.autograd import Variable
 from utils.utils import warmup_linear
 import torch.backends.cudnn
-from .interest_pooling import InterestPooling1, InterestPooling2
+from .interest_pooling import InterestPooling1
 from .bert_model import BertConfig, BertModel
 from common.logger import logger
 import json
 import datetime
 import traceback
 import random
+from .dice import *
 
 """
     网络结构部分
@@ -81,11 +82,13 @@ class DeepFM(torch.nn.Module):
                  optimizer_type='adam', is_batch_norm=False, verbose=True, random_seed=950104, weight_decay=0.0,
                  use_fm=True, use_ffm=False, use_deep=True, loss_type='logloss', eval_metric=roc_auc_score,
                  use_cuda=True, n_class=2, greater_is_better=True, cin_deep_layers=[100, 32], cin_layer_sizes=[50, 50, 50, 100],
-                 cin_activation='relu', is_cin_bn=True, cin_direct=False, use_cin_bias=False,
-                 cin_deep_dropouts=[0.5, 0.5], use_cin=True, use_bert=True, bert_dropouts=0.5, bert_use_dropout=False,
-                 num_attention_heads=8
+                 cin_activation='relu', use_line=False,
+                 is_cin_bn=True,
+                 cin_direct=False, use_cin_bias=False, bert_use_dropout=False, num_hidden_layers=12,
+                 cin_deep_dropouts=[0.5, 0.5], use_cin=True, use_bert=True, bert_dropouts=0.5, num_attention_heads=8
                  ):
         super(DeepFM, self).__init__()
+        self.use_line = use_line
         self.total_count = 0
         self.field_size = field_size
         self.feature_sizes = feature_sizes
@@ -125,9 +128,9 @@ class DeepFM(torch.nn.Module):
         self.use_cin = use_cin
         self.cin_deep_layers = cin_deep_layers
         self.cin_deep_dropouts = cin_deep_dropouts
+        self.bert_use_dropout = bert_use_dropout
         self.use_bert = use_bert
         self.num_attention_heads = num_attention_heads
-        self.bert_use_dropout = bert_use_dropout
 
         torch.manual_seed(self.random_seed)
 
@@ -139,30 +142,9 @@ class DeepFM(torch.nn.Module):
             print("Cuda is not available, automatically changed into cpu model")
 
         """
-            check use fm or ffm
-        """
-        if self.use_fm and self.use_ffm:
-            print("only support one type only, please make sure to choose only fm or ffm part")
-            exit(1)
-        elif self.use_fm and self.use_deep:
-            print("The model is deepfm(fm+deep layers)")
-        elif self.use_ffm and self.use_deep:
-            print("The model is deepffm(ffm+deep layers)")
-        elif self.use_fm:
-            print("The model is fm only")
-        elif self.use_ffm:
-            print("The model is ffm only")
-        elif self.use_deep:
-            print("The model is deep layers only")
-        else:
-            print("You have to choose more than one of (fm, ffm, deep) models to use")
-            exit(1)
-
-        """
           InterestPooling1
         """
         self.interest_pooling = InterestPooling1(30, embedding_size, use_cuda=self.use_cuda)
-        # self.interest_pooling = InterestPooling2(embedding_size, use_cuda=self.use_cuda)
 
         """
             bias
@@ -174,125 +156,44 @@ class DeepFM(torch.nn.Module):
         """
         self.title_embedding = nn.Embedding(tile_word_size, embedding_size)
         self.video_line = nn.Linear(video_feature_size, embedding_size)
+        self.video_dice = Dice(self.embedding_size)
         self.audio_line = nn.Linear(audio_feature_size, embedding_size)
-        if self.use_fm:
-            print("Init fm part")
+        self.audio_dice = Dice(self.embedding_size)
+        self.bert_dice = Dice(self.embedding_size)
+        print("Init fm part")
+        if self.use_line:
             self.fm_first_order_embeddings = nn.ModuleList(
                 [nn.Embedding(feature_size, 1, sparse=True) for feature_size in self.feature_sizes])
             if self.dropout_shallow:
                 self.fm_first_order_dropout = nn.Dropout(self.dropout_shallow[0])
-            self.fm_second_order_embeddings = nn.ModuleList(
-                [nn.Embedding(feature_size, self.embedding_size, sparse=True) for feature_size in self.feature_sizes])
-            if self.dropout_shallow:
-                self.fm_second_order_dropout = nn.Dropout(self.dropout_shallow[1])
-            print("Init fm part succeed")
+        self.fm_second_order_embeddings = nn.ModuleList(
+            [nn.Embedding(feature_size, self.embedding_size, sparse=True) for feature_size in self.feature_sizes])
+        if self.dropout_shallow:
+            self.fm_second_order_dropout = nn.Dropout(self.dropout_shallow[1])
+        print("Init fm part succeed")
 
-        """
-            ffm part
-        """
-        if self.use_ffm:
-            print("Init ffm part")
-            self.ffm_first_order_embeddings = nn.ModuleList(
-                [nn.Embedding(feature_size, 1) for feature_size in self.feature_sizes])
-            if self.dropout_shallow:
-                self.ffm_first_order_dropout = nn.Dropout(self.dropout_shallow[0])
-            self.ffm_second_order_embeddings = nn.ModuleList(
-                [nn.ModuleList([nn.Embedding(feature_size, self.embedding_size) for i in range(self.field_size)]) for
-                 feature_size in self.feature_sizes])
-            if self.dropout_shallow:
-                self.ffm_second_order_dropout = nn.Dropout(self.dropout_shallow[1])
-            print("Init ffm part succeed")
-
-        """
-            deep part
-        """
-        if self.use_deep:
-            print("Init deep part")
-            if not self.use_fm and not self.use_ffm:
-                self.fm_second_order_embeddings = nn.ModuleList(
-                    [nn.Embedding(feature_size, self.embedding_size) for feature_size in self.feature_sizes])
-
-            if self.is_deep_dropout:
-                self.linear_0_dropout = nn.Dropout(self.dropout_deep[0])
-
-            self.linear_1 = nn.Linear((self.field_size+3) * self.embedding_size, deep_layers[0])
-            if self.is_batch_norm:
-                self.batch_norm_1 = nn.BatchNorm1d(deep_layers[0])
-            if self.is_deep_dropout:
-                self.linear_1_dropout = nn.Dropout(self.dropout_deep[1])
-            for i, h in enumerate(self.deep_layers[1:], 1):
-                setattr(self, 'linear_' + str(i + 1), nn.Linear(self.deep_layers[i - 1], self.deep_layers[i]))
-                if self.is_batch_norm:
-                    setattr(self, 'batch_norm_' + str(i + 1), nn.BatchNorm1d(deep_layers[i]))
-                if self.is_deep_dropout:
-                    setattr(self, 'linear_' + str(i + 1) + '_dropout', nn.Dropout(self.dropout_deep[i + 1]))
-
-            print("Init deep part succeed")
-        """
-                    cin part
-                """
-        if self.use_cin:
-            logger.info(json.dumps({"init info": "Init cin part"}))
-            # conv1d init
-            in_channels = self.field_size
-            for i, layer_size in enumerate(self.cin_layer_sizes[:-1]):
-                in_channels = self.cin_layer_sizes[0] * layer_size
-                if self.cin_direct or i == len(self.cin_layer_sizes[1:]) - 1:
-                    out_channels = self.cin_layer_sizes[i + 1]
-                else:
-                    out_channels = 2 * self.cin_layer_sizes[i + 1]
-                setattr(self, 'conv1d_' + str(i + 1),
-                        nn.Conv1d(in_channels, out_channels, kernel_size=1, bias=self.use_cin_bias))
-                if self.is_cin_bn:
-                    setattr(self, 'conv1d_bn_' + str(i + 1), nn.BatchNorm1d(out_channels))
-            if len(self.cin_deep_layers) != 0:
-                if len(self.cin_deep_dropouts) != 0:
-                    assert len(self.cin_deep_layers) == len(
-                        self.cin_deep_dropouts), 'make sure:len(cin_deep_layers) == len(cin_deep_dropouts)'
-                for i, h in enumerate(self.cin_deep_layers):
-                    if i == 0:
-                        setattr(self, 'cin_linear_' + str(i + 1),
-                                nn.Linear(sum(self.cin_layer_sizes[1:]), self.cin_deep_layers[i]))
-                    else:
-                        setattr(self, 'cin_linear_' + str(i + 1),
-                                nn.Linear(self.cin_deep_layers[i - 1], self.cin_deep_layers[i]))
-                    if self.is_cin_bn:
-                        setattr(self, 'cin_deep_bn_' + str(i + 1), nn.BatchNorm1d(self.cin_deep_layers[i]))
-                    if len(self.cin_deep_dropouts) != 0:
-                        setattr(self, 'cin_linear_' + str(i + 1) + '_dropout', nn.Dropout(self.cin_deep_dropouts[i]))
-            logger.info(json.dumps({"init info": "Init cin part succeed"}))
-
-        """
-           bert layer
-        """
-        if self.use_bert:
-            logger.info(json.dumps({"init info": "Init bert part"}))
-            self.config = BertConfig(hidden_size=embedding_size, num_hidden_layers=3,
-                                     num_attention_heads=num_attention_heads, intermediate_size=embedding_size*4)
-            self.bert_model = BertModel(self.config, self.use_cuda)
-            logger.info(json.dumps({"init info": "Init bert part succeed"}))
+        logger.info(json.dumps({"init info": "Init bert part"}))
+        self.config = BertConfig(
+            hidden_size=embedding_size, num_hidden_layers=num_hidden_layers, attention_probs_dropout_prob=0.1,
+            use_index=[-1, 0, 1, 4, 7, 10], num_attention_heads=num_attention_heads, intermediate_size=embedding_size*4)
+        self.bert_model = BertModel(self.config, self.use_cuda)
+        logger.info(json.dumps({"init info": "Init bert part succeed"}))
         """
             linear_layer
         """
-        concat_input_size = self.field_size
-        if self.use_fm:
-            concat_input_size = concat_input_size + self.embedding_size
-        if self.use_deep:
-            concat_input_size = concat_input_size + self.deep_layers[-1]
-        if self.use_cin:
-            if len(self.cin_deep_layers) != 0:
-                concat_input_size = concat_input_size + self.cin_deep_layers[-1]
-            else:
-                concat_input_size = concat_input_size + sum(self.cin_layer_sizes[1:])
+        self.bert_line = nn.Linear(self.embedding_size*len(self.config.use_index), self.embedding_size)
+        concat_input_size = self.embedding_size
+        if self.use_line:
+            concat_input_size += self.field_size
         if self.use_bert:
             concat_input_size += self.embedding_size
-
         if self.bert_use_dropout:
             self.bert_drop_out = nn.Dropout(bert_dropouts)
-        # self.like_concat_linear_layer = nn.Linear(concat_input_size, 128)
+        # self.like_concat_linear_layer = nn.Linear(concat_input_size, 64)
+
         self.like_concat_linear_layer1 = nn.Linear(concat_input_size, self.n_class)
 
-        # self.finish_concat_linear_layer = nn.Linear(concat_input_size, 128)
+        # self.finish_concat_linear_layer = nn.Linear(concat_input_size, 64)
         self.finish_concat_linear_layer2 = nn.Linear(concat_input_size, self.n_class)
 
         # self.result_drop_out = nn.Dropout(0.8)
@@ -305,28 +206,7 @@ class DeepFM(torch.nn.Module):
         :param Xv_train: value input tensor, batch_size * k * 1
         :return: the last output
         """
-        """
-            fm part
-        """
-
-        # """
-        #    video and title
-        # """
-        # video_feature = self.video_line(video_feature)
-        #
-        # title_embedding = self.title_embedding(title_feature)
-        # title_embedding = title_embedding * title_value
-        # title_embedding = title_embedding.permute(0, 2, 1)
-        # title_embedding = torch.sum(title_embedding, -1)
-        #
-        # """
-        #    video and title end
-        # """
-
-        if self.use_fm:
-            # print("test", Xi[:, 0, :])
-            # exit()
-
+        if self.use_line:
             fm_first_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
                                       enumerate(self.fm_first_order_embeddings)]
             # fm_first_order_emb_arr = list()
@@ -339,50 +219,18 @@ class DeepFM(torch.nn.Module):
             if self.is_shallow_dropout:
                 fm_first_order = self.fm_first_order_dropout(fm_first_order)
 
-            # use 2xy = (x+y)^2 - x^2 - y^2 reduce calculation
-            fm_second_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
-                                       enumerate(self.fm_second_order_embeddings)]
+        # use 2xy = (x+y)^2 - x^2 - y^2 reduce calculation
+        fm_second_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
+                                   enumerate(self.fm_second_order_embeddings)]
 
-            # fm_second_order_emb_arr.append(video_feature)
-            # fm_second_order_emb_arr.append(title_embedding)
-            # print([i.size() for i in fm_second_order_emb_arr])
-            fm_sum_second_order_emb = sum(fm_second_order_emb_arr)
-            # print("sum", fm_sum_second_order_emb.size())
-            # exit()
-            fm_sum_second_order_emb_square = fm_sum_second_order_emb * fm_sum_second_order_emb  # (x+y)^2
-            fm_second_order_emb_square = [item * item for item in fm_second_order_emb_arr]
-            fm_second_order_emb_square_sum = sum(fm_second_order_emb_square)  # x^2+y^2
-            fm_second_order = (fm_sum_second_order_emb_square - fm_second_order_emb_square_sum) * 0.5
-            if self.is_shallow_dropout:
-                fm_second_order = self.fm_second_order_dropout(fm_second_order)
-
-        """
-            ffm part
-        """
-        if self.use_ffm:
-            ffm_first_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
-                                       enumerate(self.ffm_first_order_embeddings)]
-            ffm_first_order = torch.cat(ffm_first_order_emb_arr, 1)
-            if self.is_shallow_dropout:
-                ffm_first_order = self.ffm_first_order_dropout(ffm_first_order)
-            ffm_second_order_emb_arr = [[(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for emb in f_embs] for
-                                        i, f_embs in enumerate(self.ffm_second_order_embeddings)]
-            ffm_wij_arr = []
-            for i in range(self.field_size):
-                for j in range(i + 1, self.field_size):
-                    ffm_wij_arr.append(ffm_second_order_emb_arr[i][j] * ffm_second_order_emb_arr[j][i])
-            ffm_second_order = sum(ffm_wij_arr)
-            if self.is_shallow_dropout:
-                ffm_second_order = self.ffm_second_order_dropout(ffm_second_order)
-
-        if self.use_fm:
-            deep_emb = torch.cat(fm_second_order_emb_arr, 1)
-        elif self.use_ffm:
-            deep_emb = torch.cat([sum(ffm_second_order_embs) for ffm_second_order_embs in ffm_second_order_emb_arr],
-                                 1)
-        else:
-            deep_emb = torch.cat([(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in
-                                  enumerate(self.fm_second_order_embeddings)], 1)
+        fm_sum_second_order_emb = sum(fm_second_order_emb_arr)
+        # print("sum", fm_sum_second_order_emb.size())
+        # exit()
+        fm_sum_second_order_emb_square = fm_sum_second_order_emb * fm_sum_second_order_emb  # (x+y)^2
+        fm_second_order_emb_square = [item * item for item in fm_second_order_emb_arr]
+        fm_second_order_emb_square_sum = sum(fm_second_order_emb_square)  # x^2+y^2
+        fm_second_order = (fm_sum_second_order_emb_square - fm_second_order_emb_square_sum) * 0.5
+        fm_second_order = self.fm_second_order_dropout(fm_second_order)
 
         if self.deep_layers_activation == 'sigmoid':
             activation = torch.sigmoid
@@ -391,158 +239,60 @@ class DeepFM(torch.nn.Module):
         else:
             activation = F.relu
 
+        # if self.use_line:
+        #     deep_emb = torch.cat([fm_first_order, fm_second_order_emb_arr, fm_second_order], 1)
+        # else:
+        #     deep_emb = torch.cat([fm_second_order_emb_arr, fm_second_order], 1)
+        deep_emb = torch.cat(fm_second_order_emb_arr, 1)
         if video_feature is not None:
 
             if self.embedding_size != 128:
                 video_feature = self.video_line(video_feature)
-                video_feature = activation(video_feature)
+                # video_feature = activation(video_feature)
+                video_feature = self.video_dice(video_feature)
 
             deep_emb = torch.cat([deep_emb, video_feature], 1)
 
         if audio_feature is not None:
-            # print(type(audio_feature))
-            # print(audio_feature)
-            # print(audio_feature.size())
             if self.embedding_size != 128:
                 audio_feature = self.audio_line(audio_feature)
-                audio_feature = activation(audio_feature)
+                # audio_feature = activation(audio_feature)
+                audio_feature = self.audio_dice(audio_feature)
 
             deep_emb = torch.cat([deep_emb, audio_feature], 1)
 
         title_embedding = self.title_embedding(title_feature)
-        # title_embedding = title_embedding*title_value
-        # title_embedding = title_embedding.permute(0, 2, 1)
-        # title_embedding = torch.sum(title_embedding, -1)
-        #
-        # title_embedding = activation(title_embedding)
         title_size = title_embedding.size()
         title_embedding = title_embedding.view(-1, title_size[1] * title_size[2])
         title_embedding = self.interest_pooling(title_embedding, title_value)
-        # title_embedding = self.interest_pooling(fm_second_order_emb_arr[0], title_embedding, title_value)
 
         deep_emb = torch.cat([deep_emb, title_embedding], 1)
 
-        """
-            deep part
-        """
-        if self.use_deep:
+        bert_emb_size = deep_emb.size()
+        label = Variable(torch.zeros(bert_emb_size[0], 1, dtype=torch.long))
+        if self.use_cuda:
+            label = label.cuda()
 
-            if self.is_deep_dropout:
-                drop_deep_emb = self.linear_0_dropout(deep_emb)
-            else:
-                drop_deep_emb = deep_emb
-            x_deep = self.linear_1(drop_deep_emb)
-            if self.is_batch_norm:
-                x_deep = self.batch_norm_1(x_deep)
-            x_deep = activation(x_deep)
-            if self.is_deep_dropout:
-                x_deep = self.linear_1_dropout(x_deep)
-            for i in range(1, len(self.deep_layers)):
-                x_deep = getattr(self, 'linear_' + str(i + 1))(x_deep)
-                if self.is_batch_norm:
-                    x_deep = getattr(self, 'batch_norm_' + str(i + 1))(x_deep)
-                x_deep = activation(x_deep)
-                if self.is_deep_dropout:
-                    x_deep = getattr(self, 'linear_' + str(i + 1) + '_dropout')(x_deep)
+        bert_emb = deep_emb.view(bert_emb_size[0], -1, self.embedding_size)
 
-        if self.use_cin:
-            # cin_embs = fm_embs #[N,H0,K]
+        bert_result = self.bert_model(bert_emb, label)
+        # print(bert_result.size())
+        # exit()
+        if self.bert_use_dropout:
+            bert_result = self.bert_drop_out(bert_result)
 
-            hidden_layers = []
-            final_result = []
-            final_len = 0
+        # bert_result = bert_result.view(bert_emb_size[0], -1)
+        bert_result = self.bert_line(bert_result)
+        # bert_result = activation(bert_result)
+        bert_result = self.bert_dice(bert_result)
 
-            # X0 = torch.transpose(fm_second_order_emb_arr, 1, 2)  # [N,K,H0]
-            deep_emb_size = deep_emb.size()
-            X0 = deep_emb.view(deep_emb_size[0], self.embedding_size, -1)
-            hidden_layers.append(X0)
-            X0 = X0.unsqueeze(-1)  # [N,K,H0,1]
+        if self.use_line:
+            concat_input = torch.cat([fm_first_order, bert_result, fm_second_order], 1)
+        else:
+            concat_input = torch.cat([bert_result, fm_second_order], 1)
 
-            for idx, layer_size in enumerate(self.cin_layer_sizes[:-1]):
-                Xk_1 = hidden_layers[-1].unsqueeze(2)  # [N,K,1,H_(k-1)]
-                # outer product
-                out_product = torch.matmul(X0, Xk_1)  # [N,K,H0,H_(k-1)]
-                out_product = out_product.view(-1, self.embedding_size, layer_size * self.cin_layer_sizes[0])
-                out_product = out_product.transpose(1, 2)  # [N,H0XH_(k-1),K]
-                # conv
-                conv = getattr(self, 'conv1d_' + str(idx + 1))
-                zk = conv(out_product)  # [N,Hk*2,K] or [N,Hk,K]
-                if self.is_cin_bn:
-                    zk = getattr(self, 'conv1d_bn_' + str(idx + 1))(zk)
-                if self.cin_activation == 'identity':
-                    zk = zk
-                else:
-                    zk = F.relu(zk)
-                # zk = zk.transpose(1,2)#[N,K,Hk*2] or [N,K,Hk]
-                if self.cin_direct:
-                    direct_connect = zk  # [N,Hk,K]
-                    next_hidden = zk.transpose(1, 2)  # [N,K,Hk]
-                else:
-                    if idx != len(self.cin_layer_sizes[1:]) - 1:
-                        direct_connect, next_hidden = zk.split(self.cin_layer_sizes[idx + 1], 1)
-                        next_hidden = next_hidden.transpose(1, 2)  # [N,K,Hk]
-                    else:
-                        direct_connect = zk
-                        next_hidden = 0
-                final_len = final_len + self.cin_layer_sizes[idx + 1]
-                final_result.append(direct_connect)
-                hidden_layers.append(next_hidden)
-            # concat
-            cin_result = torch.cat(final_result, 1)  # [N,H1+...+Hk,K]
-            cin_result = torch.sum(cin_result, -1)  # [N,H1+...+Hk]
-            # lr
-            if len(self.cin_deep_layers) != 0:
-                if self.cin_activation == 'identity':
-                    activation = F.relu
-                else:
-                    activation = F.relu
-                for i in range(len(self.cin_deep_layers)):
-                    cin_result = getattr(self, 'cin_linear_' + str(i + 1))(cin_result)
-                    if self.is_cin_bn:
-                        cin_result = getattr(self, 'cin_deep_bn_' + str(i + 1))(cin_result)
-                    cin_result = activation(cin_result)
-                    if len(self.cin_deep_dropouts) != 0:
-                        cin_result = getattr(self, 'cin_linear_' + str(i + 1) + '_dropout')(cin_result)
-
-        if self.use_bert:
-            bert_emb_size = deep_emb.size()
-            # size = embeddings.size()
-            label = Variable(torch.zeros(bert_emb_size[0], 1, dtype=torch.long))
-            if self.use_cuda:
-                label = label.cuda()
-
-            bert_emb = deep_emb.view(bert_emb_size[0], -1, self.embedding_size)
-            bert_result = self.bert_model(bert_emb, label)
-            if self.bert_use_dropout:
-                bert_result = self.bert_drop_out(bert_result)
-
-        concat_input = fm_first_order
-        # print(concat_input.size())
-        # print(x_deep.size())
-        if self.use_deep:
-            concat_input = torch.cat([concat_input, x_deep], 1)
-        if self.use_fm:
-            if concat_input is not None:
-                concat_input = torch.cat([concat_input, fm_second_order], 1)
-            else:
-                concat_input = fm_second_order
-        if self.use_cin:
-            # print("cin_result", cin_result.size())
-            if concat_input is not None:
-                concat_input = torch.cat([concat_input, cin_result], 1)
-            else:
-                concat_input = cin_result
-        if self.use_bert:
-            concat_input = torch.cat([concat_input, bert_result], 1)
-
-        # like = self.result_drop_out(concat_input)
-        # like = self.like_concat_linear_layer(concat_input)
-        # like = torch.sigmoid(like)
         like = self.like_concat_linear_layer1(concat_input)
 
-        # finish = self.result_drop_out(concat_input)
-        # finish = self.finish_concat_linear_layer(concat_input)
-        # finish = torch.sigmoid(finish)
         finish = self.finish_concat_linear_layer2(concat_input)
 
         return like, finish
@@ -550,29 +300,39 @@ class DeepFM(torch.nn.Module):
     def fit2(self, model, optimizer, criterion, Xi_train, Xv_train, video_feature, audio_feature, title_feature, title_value,
              y_like_train, y_finish_train, count, Xi_valid=None, Xv_valid=None, y_like_valid=None, y_finish_valid=None,
              video_feature_val=None, audio_feature_val=None, title_feature_val=None,
-             title_value_val=None, save_path=None, total_epochs=3, current_epoch=0):
+             title_value_val=None, save_path=None, total_epochs=3, current_epoch=0, task="finish"):
 
         # if save_path and not os.path.exists('/'.join(save_path.split('/')[0:-1])):
         #     print("Save path is not existed!")
         #     return
         self.train()
 
-        if self.verbose:
-            print("pre_process data ing...")
+        Xi_train = np.array(Xi_train).T.reshape((-1, self.field_size, 1))
+        video_feature = np.array(video_feature).T
+        audio_feature = np.array(audio_feature).T
+        title_feature = np.array(title_feature).T
+        title_value = np.array(title_value).T
+        Xv_train = np.array(Xv_train).T
 
-        Xi_train = np.array(Xi_train).reshape((-1, self.field_size, 1))
-        # video_feature = np.array(video_feature)
-        title_feature = np.array(title_feature)
+        # title_feature = np.array(title_feature)
         # title_value = [[[j for _ in range(self.embedding_size)] for j in i] for i in title_value]
-        title_value = np.array(title_value)
-        Xv_train = np.array(Xv_train)
+        # title_value = np.array(title_value)
+
         y_like_train = np.array(y_like_train)
         y_finish_train = np.array(y_finish_train)
         # y_train = np.concatenate([y_like_train.reshape(-1, 1), y_finish_train.reshape(-1, 1)], 1)
         x_size = Xi_train.shape[0]
 
-        if self.verbose:
-            print("pre_process data finished")
+        # if self.verbose:
+        #     print("pre_process data finished")
+        #     print("Xi_train", Xi_train.shape)
+        #     print("Xv_train", Xv_train.shape)
+        #     print("video_feature", video_feature.shape)
+        #     print("audio_feature", audio_feature.shape)
+        #     print("title_feature", title_feature.shape)
+        #     print("title_value", title_value.shape)
+        #     print("y_like_train", y_like_train.shape)
+        #     print("y_finish_train", y_finish_train.shape)
 
         total_loss = 0.0
         batch_iter = x_size // self.batch_size
@@ -589,6 +349,21 @@ class DeepFM(torch.nn.Module):
             batch_xv = Variable(torch.FloatTensor(Xv_train[offset:end]))
             batch_y_like_train = torch.LongTensor(y_like_train[offset:end])
             batch_y_finish_train = torch.LongTensor(y_finish_train[offset:end])
+            # weight_list = list()
+            if task == "finish":
+                ratio = int(len(y_finish_train[offset:end])/(sum(y_finish_train[offset:end])+1))
+            else:
+                ratio = int(len(y_like_train[offset:end]) / (sum(y_like_train[offset:end]) + 1))
+            if random.random() > 0.99:
+                # print("ratio", ratio)
+                pass
+            weight_list = [1, ratio-1]
+            # for i in y_finish_train[offset:end]:
+            #     if i == 0:
+            #         weight_list.append(1)
+            #     else:
+            #         weight_list.append(ratio-1)
+            batch_weight_list = torch.FloatTensor(weight_list)
             # batch_label = Variable(torch.cat([torch.FloatTensor(y_like_train[offset:end]).view(-1, 1),
             #                                   torch.FloatTensor(y_finish_train[offset:end]).view(-1, 1)], -1))
             try:
@@ -609,9 +384,10 @@ class DeepFM(torch.nn.Module):
             batch_title_feature = Variable(torch.LongTensor(title_feature[offset:end]))
 
             if self.use_cuda:
-                batch_xi, batch_xv, batch_y_like_train, batch_y_finish_train, batch_video_feature, batch_audio_feature, batch_title_value, batch_title_feature = \
+                batch_xi, batch_xv, batch_y_like_train, batch_y_finish_train, batch_video_feature, batch_audio_feature, batch_title_value, batch_title_feature, batch_weight_list = \
                     batch_xi.cuda(), batch_xv.cuda(), batch_y_like_train.cuda(), batch_y_finish_train.cuda(), batch_video_feature.cuda(), \
-                    batch_audio_feature.cuda(), batch_title_value.cuda(), batch_title_feature.cuda()
+                    batch_audio_feature.cuda(), batch_title_value.cuda(), batch_title_feature.cuda(), batch_weight_list.cuda()
+
             for item in optimizer:
                 item.zero_grad()
 
@@ -620,30 +396,39 @@ class DeepFM(torch.nn.Module):
             like, finish = outputs
             # print("like", like.size())
             # print("batch_y_like_train", batch_y_like_train.size())
+            # criterion.weight = batch_weight_list
             like_loss = criterion(like, batch_y_like_train)
             finish_loss = criterion(finish, batch_y_finish_train)
-            loss = 0.8*like_loss + 0.2*finish_loss
+            loss = like_loss + 0.2*finish_loss
+            # if task == "finish":
+            #     loss = finish_loss
+            # else:
+            #     loss = like_loss
+            # loss.backward()
             # loss = like_loss
             loss.backward()
+            # print(loss)
+            # exit()
 
             # for param_group in optimizer.param_groups:
             #     current_learn_rate = self.learning_rate*warmup_linear(self.total_count/(
             #             20000000*total_epochs/self.batch_size))
             #     param_group['lr'] = current_learn_rate
+
             for item in optimizer:
                 item.step()
             # print(loss)
             total_loss += loss.data
             if self.verbose:
-                if self.total_count % 1000 == 0:  # print every 100 mini-batches
+                if self.total_count % 100 == 0:  # print every 100 mini-batches
                     # eval = self.evaluate(batch_xi, batch_xv, batch_video_feature, batch_audio_feature,
                     # batch_title_feature, batch_title_value, batch_y_like_train, batch_y_finish_train)
                     try:
                         like_auc = self.eval_metric(batch_y_like_train.cpu().detach().numpy(), F.softmax(like, dim=-1).cpu().detach().numpy()[:, 1])
                         finish_auc = self.eval_metric(batch_y_finish_train.cpu().detach().numpy(), F.softmax(finish, dim=-1).cpu().detach().numpy()[:, 1])
-                        print('****train***[%d, %5d] metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
-                              (count + 1, i + 1, like_auc, finish_auc, 0,
-                               time() - batch_begin_time))
+                        # print('****train***[%d, %5d] metric: like-%.6f, finish-%.6f, learn rate: %s, time: %.1f s' %
+                        #       (count + 1, i + 1, like_auc, finish_auc, 0,
+                        #        time() - batch_begin_time))
 
                         log_json = {"timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                                     "status": "train", "count": count + 1,
@@ -660,10 +445,11 @@ class DeepFM(torch.nn.Module):
                     batch_begin_time = time()
             # if self.total_count % 100 == 0:
             #     print("total count", self.total_count)
-            if save_path and self.total_count % 8000 == 0:
+            if save_path and self.total_count % 2000 == 0:
                 torch.save(self.state_dict(), os.path.join(save_path, "byte_%s.model" % self.total_count))
 
-        if Xi_valid is not None and random.random() > 0.6:
+        if Xi_valid is not None and count % 20 == 0:
+            print('valid*' * 20)
             Xi_valid = np.array(Xi_valid).reshape((-1, self.field_size, 1))
             Xv_valid = np.array(Xv_valid)
 
@@ -682,7 +468,7 @@ class DeepFM(torch.nn.Module):
                     audio_feature_val,
                     title_feature_val, title_value_val)
                 # valid_result.append(valid_eval)
-                print('valid*' * 20)
+
                 print('val [%d] loss: %.6f metric: like-%.6f,finish-%.6f, learn rate: %s,  time: %.1f s' %
                       (count + 1, valid_loss, valid_eval[0], valid_eval[1], 0,
                        time() - epoch_begin_time))
@@ -696,17 +482,6 @@ class DeepFM(torch.nn.Module):
             except:
                 traceback.print_exc()
                 print("eval wrong!!!!!!")
-
-        # train_loss, train_eval = self.eval_by_batch(Xi_train, Xv_train, y_like_train, y_finish_train, x_size,
-        #                                             video_feature, audio_feature, title_feature, title_value)
-        # print('*' * 50)
-        # print('train [%d] loss: %.6f metric: like-%.6f,finish-%.6f, learn rate: %s, time: %.1f s' %
-        #       (count + 1, train_loss, train_eval[0], train_eval[1], current_learn_rate, time() - epoch_begin_time))
-        # log_json = {"count": count + 1, "loss": "%.6f" % train_loss, "like_auc": train_eval[0],
-        #             "finish_auc": train_eval[1], "current_learn_rate": current_learn_rate,
-        #             "time": time() - epoch_begin_time}
-        # logger.info(json.dumps(log_json))
-        # print('*' * 50)
 
     def eval_by_batch(self, Xi, Xv, like_y, finish_y, x_size, video_feature, audio_feature, title_feature, title_value):
         total_loss = 0.0
@@ -799,7 +574,13 @@ class DeepFM(torch.nn.Module):
         return pred
 
     def predict_proba(self, Xi, Xv, video_feature, audio_feature, title_feature, title_value):
-        Xi = np.array(Xi).reshape((-1, self.field_size, 1))
+        Xi = np.array(Xi).T.reshape((-1, self.field_size, 1))
+        Xv = np.array(Xv).T
+        video_feature = np.array(video_feature).T
+        audio_feature = np.array(audio_feature).T
+        title_feature = np.array(title_feature).T
+        title_value = np.array(title_value).T
+
         Xi = Variable(torch.LongTensor(Xi))
         Xv = Variable(torch.FloatTensor(Xv))
 

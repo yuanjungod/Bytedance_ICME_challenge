@@ -65,6 +65,9 @@ class InterestPooling2(torch.nn.Module):
             keys: [N,T,K]
             bags_Xi:[N,T]
         """
+        # print(queries.size())
+        # print(keys.size())
+        # exit()
         queries = queries.repeat(1, keys.size(1), 1)  # [N,T,K]
         din_all = torch.cat([queries, keys, queries - keys, queries * keys], -1)  # [N,T,4K]
         # linear

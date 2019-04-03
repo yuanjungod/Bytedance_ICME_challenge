@@ -88,9 +88,3 @@ class DataParser(object):
 
         idx = map(lambda one_id: np.int32(one_id), idx)
         return idx, features, label
-
-
-if __name__ == "__main__":
-    a = PosShifts(2)
-    print(a.get_features_num())
-    print(a.shift())

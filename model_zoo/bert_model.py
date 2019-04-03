@@ -63,7 +63,8 @@ class BertConfig(object):
                  hidden_act="gelu",
                  hidden_dropout_prob=0.1,
                  attention_probs_dropout_prob=0.1,
-                 initializer_range=0.02):
+                 initializer_range=0.02,
+                 use_index=(-1, -5, -9)):
         self.hidden_size = hidden_size
         self.num_hidden_layers = num_hidden_layers
         self.num_attention_heads = num_attention_heads
@@ -72,6 +73,7 @@ class BertConfig(object):
         self.hidden_dropout_prob = hidden_dropout_prob
         self.attention_probs_dropout_prob = attention_probs_dropout_prob
         self.initializer_range = initializer_range
+        self.use_index = use_index
 
 try:
     from apex.normalization.fused_layer_norm import FusedLayerNorm as BertLayerNorm
@@ -355,13 +357,14 @@ class BertModel(BertPreTrainedModel):
         # self.like_pooler = BertPooler(config, 0)
         # self.finish_pooler = BertPooler(config, 1)
         self.label_pooler = BertPooler(config, 0)
-        self.like_class_label = nn.Linear(config.hidden_size, 1)
-        self.finish_class_label = nn.Linear(config.hidden_size, 1)
+        # self.like_class_label = nn.Linear(config.hidden_size, 1)
+        # self.finish_class_label = nn.Linear(config.hidden_size, 1)
         self.class_embedding = nn.Embedding(2, config.hidden_size)
         self.apply(self.init_bert_weights)
         self.use_cuda = use_cuda
+        self.use_index = config.use_index
 
-    def forward(self, embeddings, label, attention_mask=None, output_all_encoded_layers=False):
+    def forward(self, embeddings, label, attention_mask=None, output_all_encoded_layers=True):
         # print("embeddings", embeddings.size())
         # size = embeddings.size()
         # label = torch.zeros(size[0], 1, dtype=torch.long).cuda()
@@ -387,10 +390,15 @@ class BertModel(BertPreTrainedModel):
             extended_attention_mask = extended_attention_mask.cuda()
 
         encoded_layers = self.encoder(embeddings, extended_attention_mask, output_all_encoded_layers=output_all_encoded_layers)
-        sequence_output = encoded_layers[-1]
+        # sequence_output = encoded_layers[-1]
         # like_pooled_output = self.like_pooler(sequence_output)
         # finish_pooled_output = self.finish_pooler(sequence_output)
-        pooled_output = self.label_pooler(sequence_output)
+
+        pooled_output = list()
+        for i in self.use_index:
+            pooled_output.append(self.label_pooler(encoded_layers[i]))
+
+        pooled_output = torch.cat(pooled_output, 1)
 
         # print("pooled_output", pooled_output.size())
         # return self.like_class_label(like_pooled_output).view(-1),

@@ -1,6 +1,7 @@
 import sqlite3
 import time
 import json
+import multiprocessing
 
 
 class UserInteractiveTool(object):
@@ -13,6 +14,7 @@ class UserInteractiveTool(object):
             self.db_client = sqlite3.connect(db_path)
             self.cursor = self.db_client.cursor()
         self.user_interactivate_list = list()
+        # self.user_interactivate_list = multiprocessing.Manager().list()
 
         # user_interactive_dict = dict()
         # user_interactive_dict['uid'] = list()

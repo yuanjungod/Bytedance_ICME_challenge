@@ -22,7 +22,7 @@ class SparseAdam(Optimizer):
         https://arxiv.org/abs/1412.6980
     """
 
-    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8):
+    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8,  weight_decay=0.01):
         if not 0.0 < lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 < eps:
@@ -31,7 +31,7 @@ class SparseAdam(Optimizer):
             raise ValueError("Invalid beta parameter at index 0: {}".format(betas[0]))
         if not 0.0 <= betas[1] < 1.0:
             raise ValueError("Invalid beta parameter at index 1: {}".format(betas[1]))
-        defaults = dict(lr=lr, betas=betas, eps=eps)
+        defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)
         super(SparseAdam, self).__init__(params, defaults)
 
     def step(self, closure=None):
@@ -68,11 +68,13 @@ class SparseAdam(Optimizer):
                 state['step'] += 1
 
                 grad = grad.coalesce()  # the update is non-linear so indices must be unique
-                # print(grad.size())
                 grad_indices = grad._indices()
                 grad_values = grad._values()
                 size = grad.size()
+
                 # print(grad_indices.size())
+                # print("grad_values", grad_values)
+                # print("p.data", p.data[grad_indices])
 
                 def make_sparse(values):
                     constructor = grad.new
@@ -87,24 +89,38 @@ class SparseAdam(Optimizer):
                 # Decay the first and second moment running average coefficient
                 #      old <- b * old + (1 - b) * new
                 # <==> old += (1 - b) * (new - old)
-                old_exp_avg_values = exp_avg._sparse_mask(grad)._values()
+
+                old_exp_avg_values = exp_avg.sparse_mask(grad)._values()
                 exp_avg_update_values = grad_values.sub(old_exp_avg_values).mul_(1 - beta1)
+
                 exp_avg.add_(make_sparse(exp_avg_update_values))
-                old_exp_avg_sq_values = exp_avg_sq._sparse_mask(grad)._values()
+
+                old_exp_avg_sq_values = exp_avg_sq.sparse_mask(grad)._values()
                 exp_avg_sq_update_values = grad_values.pow(2).sub_(old_exp_avg_sq_values).mul_(1 - beta2)
+
                 exp_avg_sq.add_(make_sparse(exp_avg_sq_update_values))
 
                 # Dense addition again is intended, avoiding another _sparse_mask
                 numer = exp_avg_update_values.add_(old_exp_avg_values)
+                # print(numer.size())
                 exp_avg_sq_update_values.add_(old_exp_avg_sq_values)
                 denom = exp_avg_sq_update_values.sqrt_().add_(group['eps'])
                 del exp_avg_update_values, exp_avg_sq_update_values
 
                 bias_correction1 = 1 - beta1 ** state['step']
                 bias_correction2 = 1 - beta2 ** state['step']
-                step_size = group['lr'] * math.sqrt(bias_correction2) / bias_correction1
-                # print(group['lr'])
 
-                p.data.add_(make_sparse(-step_size * numer.div_(denom)))
+                step_size = group['lr'] * math.sqrt(bias_correction2) / bias_correction1
+
+                # print((-step_size * numer.div_(denom)).size())
+                if group['weight_decay'] != 0:
+                    w_values = p.data[grad_indices].view(-1, size[1])
+                    # print("weight_decay", (-step_size * numer.div_(denom) - group['lr'] * group['weight_decay']*w_values).size())
+
+                    p.data.add_(
+                        make_sparse(-step_size * numer.div_(denom) - group['lr'] * group['weight_decay']*w_values))
+                else:
+                    p.data.add_(
+                        make_sparse(-step_size * numer.div_(denom)))
 
         return loss

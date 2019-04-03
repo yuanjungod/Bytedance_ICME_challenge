@@ -1,6 +1,7 @@
 import json
 import sqlite3
 import time
+import multiprocessing
 
 
 class TitleAnalyTool(object):
@@ -12,7 +13,7 @@ class TitleAnalyTool(object):
         if title_db_path is not None:
             self.db_client = sqlite3.connect(title_db_path)
             self.cursor = self.db_client.cursor()
-        self.result_dict = None
+        self.result_dict = multiprocessing.Manager().dict()
 
     def create_table(self):
         sql = '''CREATE TABLE TITLE
@@ -44,7 +45,7 @@ class TitleAnalyTool(object):
 
     def get_all_from_db(self):
         start = time.time()
-        self.result_dict = dict()
+        # self.result_dict = dict()
         sql = "SELECT * FROM TITLE"
         cursor = self.cursor.execute(sql)
         for row in cursor:
@@ -54,7 +55,7 @@ class TitleAnalyTool(object):
 
     def get_from_db(self, item_id):
         # start = time.time()
-        self.result_dict = dict()
+        # self.result_dict = dict()
         sql = "SELECT * FROM TITLE WHERE ITEM_ID=%s" % item_id
         cursor = self.cursor.execute(sql)
         result = list()
@@ -65,7 +66,7 @@ class TitleAnalyTool(object):
 
     def get_all_from_origin_file(self, file_path):
         title_file = open(file_path, 'r')
-        self.result_dict = dict()
+        # self.result_dict = dict()
         line = title_file.readline()
         count = 0
         while line:

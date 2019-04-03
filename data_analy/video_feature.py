@@ -1,6 +1,7 @@
 import json
 import sqlite3
 import time
+import multiprocessing
 
 
 class VideoFeature(object):
@@ -9,7 +10,8 @@ class VideoFeature(object):
         if db_path is not None:
             self.video_connect = sqlite3.connect(db_path)
             self.cursor = self.video_connect.cursor()
-        self.video_dict = dict()
+        # self.video_dict = dict()
+        self.video_dict = multiprocessing.Manager().dict()
 
     def insert(self, video_feature_path):
         count = 0
