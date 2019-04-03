@@ -126,3 +126,4 @@ tensorflow_code
 *.csv
 .idea/workspace.xml
 track2/*
+result/*
